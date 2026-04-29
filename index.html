@@ -636,10 +636,14 @@ function renderTimerPanel() {
 
   projects.forEach(p => {
     const isActive = active?.projectId === p.id;
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;align-items:center;gap:8px;";
+
     const btn = document.createElement("button");
     btn.className = "proj-item" + (isActive ? " active-proj" : "");
     btn.style.borderColor = isActive ? p.color : "";
     btn.style.background = isActive ? p.color + "18" : "";
+    btn.style.flex = "1";
     btn.innerHTML = `
       <div class="proj-dot" style="background:${p.color}"></div>
       <div style="flex:1">
@@ -653,14 +657,51 @@ function renderTimerPanel() {
     `;
     if (!active) {
       btn.addEventListener("click", () => {
-        const proj = getProject(p.id);
         document.getElementById("timer-display").style.color = p.color;
         document.getElementById("timer-project-label").textContent = "◦ " + p.name;
         document.getElementById("timer-controls").style.display = "flex";
         startTimer(p.id);
       });
     }
-    list.appendChild(btn);
+
+    // Botón eliminar — solo visible cuando no hay timer activo
+    if (!active) {
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn-del";
+      delBtn.title = "Eliminar proyecto";
+      delBtn.textContent = "✕";
+      delBtn.style.cssText = `
+        background:transparent;border:1px solid var(--border);
+        border-radius:8px;width:36px;height:36px;
+        color:var(--muted);cursor:pointer;font-size:13px;
+        flex-shrink:0;transition:all 0.15s;
+      `;
+      delBtn.addEventListener("mouseenter", () => {
+        delBtn.style.borderColor = "#f08080";
+        delBtn.style.color = "#f08080";
+        delBtn.style.background = "#2a1a1a";
+      });
+      delBtn.addEventListener("mouseleave", () => {
+        delBtn.style.borderColor = "var(--border)";
+        delBtn.style.color = "var(--muted)";
+        delBtn.style.background = "transparent";
+      });
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (confirm(`¿Eliminar el proyecto "${p.name}"?\n\nSus sesiones en el historial se conservarán.`)) {
+          projects = projects.filter(pr => pr.id !== p.id);
+          saveProjects();
+          renderTimerPanel();
+          populateManualSelect();
+        }
+      });
+      wrapper.appendChild(btn);
+      wrapper.appendChild(delBtn);
+    } else {
+      wrapper.appendChild(btn);
+    }
+
+    list.appendChild(wrapper);
   });
 }
 
