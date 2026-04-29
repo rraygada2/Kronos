@@ -499,12 +499,7 @@ const LS = {
 };
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const DEFAULT_PROJECTS = [
-  { id: "sorbo",   name: "Sörbo",    color: "#f9c74f", rate: 0 },
-  { id: "belemur", name: "Be.Lemur", color: "#74c0fc", rate: 0 },
-  { id: "inotap",  name: "Inotap",   color: "#f08080", rate: 0 },
-  { id: "general", name: "General",  color: "#a6e3a1", rate: 0 },
-];
+const DEFAULT_PROJECTS = [];
 
 let projects  = LS.get("kron_projects") || DEFAULT_PROJECTS;
 let sessions  = LS.get("kron_sessions") || [];
@@ -612,6 +607,33 @@ function updateActiveBadge() {
 function renderTimerPanel() {
   const list = document.getElementById("projects-list");
   list.innerHTML = "";
+
+  if (projects.length === 0) {
+    list.innerHTML = `
+      <div style="
+        background:#13132a;
+        border:1px dashed #3a3a6a;
+        border-radius:12px;
+        padding:28px 24px;
+        text-align:center;
+        margin-bottom:8px;
+      ">
+        <div style="font-size:28px;margin-bottom:12px">⏱</div>
+        <div style="font-size:14px;color:#e0e0f0;font-weight:500;margin-bottom:8px">
+          Bienvenido a Kronos
+        </div>
+        <div style="font-size:12px;color:#5a5a8a;line-height:1.8">
+          Para empezar, crea tu primer proyecto:<br>
+          <span style="color:#c792ea">1.</span> Clic en <strong style="color:#e0e0f0">+ Nuevo proyecto</strong> aquí abajo<br>
+          <span style="color:#c792ea">2.</span> Dale un nombre y elige un color<br>
+          <span style="color:#c792ea">3.</span> Agrega tu tarifa por hora (opcional)<br>
+          <span style="color:#c792ea">4.</span> Pulsa el proyecto para iniciar el timer
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   projects.forEach(p => {
     const isActive = active?.projectId === p.id;
     const btn = document.createElement("button");
