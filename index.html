@@ -288,6 +288,20 @@
         <div class="unit-wrap"><input type="number" id="new-proj-rate" placeholder="0.00" min="0" step="0.5"><span class="unit">S/.</span></div>
         <span style="font-size:11px;color:var(--muted)">También puedes configurarlo luego en el Dashboard</span>
       </div>
+      <div class="field">
+        <label>IMAGEN <span style="color:var(--muted);font-weight:300">(opcional, se redimensiona a 80x80)</span></label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <label id="img-upload-label" style="background:#1a1a30;border:1px dashed var(--border);border-radius:8px;padding:9px 16px;cursor:pointer;font-size:12px;color:var(--muted);transition:all 0.15s;flex-shrink:0">
+            + Subir imagen
+            <input type="file" id="new-proj-img" accept="image/*" style="display:none">
+          </label>
+          <div id="img-preview-wrap" style="display:none;position:relative">
+            <img id="img-preview" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">
+            <button id="btn-remove-img" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#2a1a1a;border:1px solid #f08080;color:#f08080;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">&#x2715;</button>
+          </div>
+        </div>
+      </div>
+      <canvas id="img-canvas" style="display:none"></canvas>
       <div class="row" style="margin-top:4px">
         <button class="btn btn-ghost" id="btn-modal-cancel">Cancelar</button>
         <button class="btn btn-primary" id="btn-modal-save">Crear proyecto</button>
@@ -314,16 +328,17 @@ const LS = {
   set:   (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
-let projects   = LS.get("kron_projects") || [];
-let sessions   = LS.get("kron_sessions") || [];
-let active     = null;
-let running    = false;
-let elapsed    = 0;
-let interval   = null;
-let histFilter = "all";
-let pendingDel = null;
-let quickOpen  = false;
-let dashMonth  = currentMonth();
+let projects      = LS.get("kron_projects") || [];
+let sessions      = LS.get("kron_sessions") || [];
+let active        = null;
+let running       = false;
+let elapsed       = 0;   // segundos acumulados (excluyendo pausa actual)
+let startTs       = null; // timestamp cuando se inició o reanudó
+let interval      = null;
+let histFilter    = "all";
+let pendingDel    = null;
+let quickOpen     = false;
+let dashMonth     = currentMonth();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(s) {
@@ -374,8 +389,14 @@ function startTimer(projectId) {
   card.classList.add("focus");
   card.style.setProperty("--fc", proj?.color||"var(--accent)");
   document.getElementById("timer-display").style.color        = proj?.color||"var(--accent)";
-  document.getElementById("timer-project-label").textContent  = "◦ "+(proj?.name||"");
-  document.getElementById("timer-project-label").style.color  = proj?.color||"var(--accent)";
+  // Avatar en el label del proyecto activo
+  const timerLabel = document.getElementById("timer-project-label");
+  if (proj?.img) {
+    timerLabel.innerHTML = '<img src="'+proj.img+'" onclick="openLightbox(this.src)" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:2px solid '+proj.color+';cursor:zoom-in">'+(proj?.name||"");
+  } else {
+    timerLabel.textContent = "◦ "+(proj?.name||"");
+  }
+  timerLabel.style.color = proj?.color||"var(--accent)";
   document.getElementById("timer-controls").style.display     = "flex";
   document.getElementById("timer-spacer").style.display       = "none";
   document.getElementById("btn-toggle-manual").style.visibility = "hidden";
@@ -385,20 +406,29 @@ function startTimer(projectId) {
     document.getElementById("timer-earning").textContent        = "S/. 0.00";
   }
   updateActiveBadge();
+  elapsed = 0;
+  startTs = Date.now();
   clearInterval(interval);
   interval = setInterval(()=>{
     if (!running) return;
-    elapsed++;
+    elapsed = Math.floor((Date.now() - startTs) / 1000);
     document.getElementById("timer-display").textContent   = fmt(elapsed);
     document.getElementById("active-elapsed").textContent  = fmt(elapsed);
     const p=active?getProject(active.projectId):null;
     if (p?.rate>0) document.getElementById("timer-earning").textContent="S/. "+((elapsed/3600)*p.rate).toFixed(2);
-  },1000);
+  },500); // 500ms para mayor precisión al reanudar
   renderTimerPanel();
 }
 
 document.getElementById("btn-pause").addEventListener("click",()=>{
   running=!running;
+  if (!running) {
+    // Al pausar: congelar elapsed real hasta este momento
+    elapsed = Math.floor((Date.now() - startTs) / 1000);
+  } else {
+    // Al reanudar: nuevo timestamp desde el elapsed acumulado
+    startTs = Date.now() - (elapsed * 1000);
+  }
   document.getElementById("btn-pause").textContent=running?"⏸ Pausar":"▶ Continuar";
 });
 
@@ -412,7 +442,7 @@ document.getElementById("btn-stop").addEventListener("click",()=>{
   const savedEl=document.getElementById("timer-saved");
   savedEl.textContent="✓ Guardado — "+fmtH(elapsed)+" en "+(proj?.name||"—")+earned;
   savedEl.style.display="block";
-  resetVisuals(); active=null; elapsed=0; running=false;
+  resetVisuals(); active=null; elapsed=0; startTs=null; running=false;
   renderTimerPanel();
   setTimeout(()=>{savedEl.style.display="none";},4500);
 });
@@ -420,7 +450,7 @@ document.getElementById("btn-stop").addEventListener("click",()=>{
 function resetVisuals() {
   document.getElementById("timer-display").textContent        = "00:00:00";
   document.getElementById("timer-display").style.color        = "var(--muted)";
-  document.getElementById("timer-project-label").textContent  = "Selecciona un proyecto para iniciar";
+  document.getElementById("timer-project-label").innerHTML    = "Selecciona un proyecto para iniciar";
   document.getElementById("timer-project-label").style.color  = "var(--muted)";
   document.getElementById("timer-earning").style.display      = "none";
   document.getElementById("timer-earning-label").style.display= "none";
@@ -430,7 +460,7 @@ function resetVisuals() {
   document.getElementById("timer-card").classList.remove("focus");
   document.getElementById("btn-toggle-manual").style.visibility="visible";
 }
-function resetTimer() { clearInterval(interval); active=null; elapsed=0; running=false; resetVisuals(); renderTimerPanel(); }
+function resetTimer() { clearInterval(interval); active=null; elapsed=0; startTs=null; running=false; resetVisuals(); renderTimerPanel(); }
 function updateActiveBadge() {
   if (!active) return;
   const proj=getProject(active.projectId);
@@ -456,8 +486,11 @@ function renderTimerPanel() {
     if (active&&!isActive) btn.setAttribute("disabled","");
     btn.style.borderColor=isActive?p.color:"";
     btn.style.background =isActive?p.color+"18":"";
+    const avatarHTML = p.img
+      ? '<img src="'+p.img+'" onclick="event.stopPropagation();openLightbox(this.src)" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid '+p.color+'44;cursor:zoom-in">' 
+      : '<div class="proj-dot" style="width:36px;height:36px;border-radius:50%;background:'+p.color+'22;border:2px solid '+p.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+p.color+'"></div></div>';
     btn.innerHTML=
-      '<div class="proj-dot" style="background:'+p.color+'"></div>'+
+      avatarHTML+
       '<div style="flex:1;min-width:0">'+
         '<div class="proj-name">'+p.name+'</div>'+
         '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:3px">'+
@@ -522,13 +555,50 @@ document.getElementById("new-proj-color").addEventListener("input",e=>{
   document.getElementById("color-preview").style.background=e.target.value;
   document.getElementById("color-hex").textContent=e.target.value;
 });
+
+// ── Imagen del proyecto ───────────────────────────────────────────────────────
+let pendingImgB64 = null;
+
+document.getElementById("new-proj-img").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById("img-canvas");
+      const SIZE = 80;
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext("2d");
+      // Crop cuadrado centrado
+      const min = Math.min(img.width, img.height);
+      const sx  = (img.width  - min) / 2;
+      const sy  = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+      pendingImgB64 = canvas.toDataURL("image/jpeg", 0.7);
+      // Preview
+      document.getElementById("img-preview").src = pendingImgB64;
+      document.getElementById("img-preview-wrap").style.display = "block";
+      document.getElementById("img-upload-label").style.display = "none";
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("btn-remove-img").addEventListener("click", () => {
+  pendingImgB64 = null;
+  document.getElementById("new-proj-img").value = "";
+  document.getElementById("img-preview-wrap").style.display = "none";
+  document.getElementById("img-upload-label").style.display = "";
+});
 document.getElementById("btn-modal-cancel").addEventListener("click",closeNewModal);
 document.getElementById("btn-modal-save").addEventListener("click",()=>{
   const name=document.getElementById("new-proj-name").value.trim();
   const color=document.getElementById("new-proj-color").value;
   const rate=parseFloat(document.getElementById("new-proj-rate").value)||0;
   if (!name){document.getElementById("new-proj-name").focus();return;}
-  projects.push({id:Date.now().toString(),name,color,rate});
+  projects.push({id:Date.now().toString(),name,color,rate,img:pendingImgB64||null});
   saveProjects(); closeNewModal(); renderTimerPanel();
 });
 document.getElementById("modal-new").addEventListener("click",e=>{if(e.target===document.getElementById("modal-new"))closeNewModal();});
@@ -538,6 +608,10 @@ function closeNewModal() {
   document.getElementById("new-proj-color").value="#c792ea";
   document.getElementById("color-preview").style.background="#c792ea";
   document.getElementById("color-hex").textContent="#c792ea";
+  document.getElementById("new-proj-img").value="";
+  document.getElementById("img-preview-wrap").style.display="none";
+  document.getElementById("img-upload-label").style.display="";
+  pendingImgB64=null;
   document.getElementById("modal-new").classList.remove("open");
 }
 
@@ -620,7 +694,12 @@ function renderDashboard() {
     const div=document.createElement("div"); div.className="proj-stat";
     div.innerHTML=
       '<div class="proj-stat-top">'+
-        '<div class="proj-stat-name"><div class="proj-dot" style="background:'+p.color+'"></div>'+p.name+'</div>'+
+        '<div class="proj-stat-name">'+
+          (p.img
+            ? '<img src="'+p.img+'" onclick="openLightbox(this.src)" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid '+p.color+'44;cursor:zoom-in">'
+            : '<div class="proj-dot" style="background:'+p.color+'"></div>')+
+          p.name+
+        '</div>'+
         '<div class="proj-stat-right">'+
           '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.secs)+'</div>'+
           (p.earnings>0?'<div class="proj-stat-earn">S/. '+p.earnings.toFixed(2)+'</div>':'')+
@@ -706,7 +785,12 @@ function renderHistoric() {
     const div=document.createElement("div"); div.className="proj-stat";
     div.innerHTML=
       '<div class="proj-stat-top">'+
-        '<div class="proj-stat-name"><div class="proj-dot" style="background:'+p.color+'"></div>'+p.name+'</div>'+
+        '<div class="proj-stat-name">'+
+          (p.img
+            ? '<img src="'+p.img+'" onclick="openLightbox(this.src)" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid '+p.color+'44;cursor:zoom-in">'
+            : '<div class="proj-dot" style="background:'+p.color+'"></div>')+
+          p.name+
+        '</div>'+
         '<div class="proj-stat-right">'+
           '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.allSecs)+'</div>'+
           (p.allEarnings>0?'<div class="proj-stat-earn">S/. '+p.allEarnings.toFixed(2)+'</div>':'')+
@@ -762,8 +846,31 @@ function renderHistorial() {
   });
 }
 
+// ── Visibility change: recalcular elapsed al volver al foco ──────────────────
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && running && startTs !== null) {
+    // Recalcular inmediatamente sin esperar el próximo tick
+    elapsed = Math.floor((Date.now() - startTs) / 1000);
+    document.getElementById("timer-display").textContent  = fmt(elapsed);
+    document.getElementById("active-elapsed").textContent = fmt(elapsed);
+    const p = active ? getProject(active.projectId) : null;
+    if (p?.rate > 0)
+      document.getElementById("timer-earning").textContent = "S/. " + ((elapsed/3600)*p.rate).toFixed(2);
+  }
+});
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById("lightbox-img").src = src;
+  document.getElementById("lightbox").style.display = "flex";
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderTimerPanel();
 </script>
+<!-- Lightbox imagen -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:#000000cc;z-index:200;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px)" onclick="document.getElementById('lightbox').style.display='none'">
+  <img id="lightbox-img" style="max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 0 60px #00000088;animation:slideUp 0.2s ease">
+</div>
 </body>
 </html>
