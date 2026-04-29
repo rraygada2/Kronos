@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kronos — Time Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d1a;
+    --card: #13132a;
+    --border: #1e1e3a;
+    --text: #e0e0f0;
+    --muted: #5a5a8a;
+    --accent: #c792ea;
+    --green: #a6e3a1;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  input, select, textarea, button {
+    font-family: 'DM Mono', monospace;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+
+  /* Header */
+  #header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #0a0a16;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  #logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+
+  #active-badge {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  #active-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: pulse 1.5s ease infinite;
+  }
+
+  #active-elapsed { font-size: 14px; font-weight: 500; color: var(--accent); }
+
+  /* Tabs */
+  #tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: #0a0a16;
+    padding: 0 24px;
+  }
+
+  .tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .tab.active {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Content */
+  #content {
+    flex: 1;
+    overflow: auto;
+    padding: 24px;
+  }
+
+  .panel { display: none; max-width: 520px; margin: 0 auto; }
+  .panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  /* Timer display */
+  #timer-display {
+    font-size: 64px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s;
+  }
+
+  #timer-project-label {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    min-height: 18px;
+  }
+
+  #timer-controls {
+    display: none;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.8; }
+  .btn-pause { background: #2a2a4a; border: 1px solid #3a3a5a; color: var(--text); }
+  .btn-stop  { background: #2a1a1a; border: 1px solid #f0808055; color: #f08080; }
+  .btn-primary { background: var(--accent); color: #0d0d1a; font-weight: 700; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+  /* Project list */
+  #projects-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .proj-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    width: 100%;
+    color: var(--text);
+  }
+
+  .proj-item:hover { border-color: #3a3a5a; }
+  .proj-item.active-proj { }
+
+  .proj-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .proj-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .proj-rate { font-size: 11px; color: var(--muted); }
+  .proj-hint { font-size: 11px; color: var(--muted); }
+  .proj-running { font-size: 11px; animation: pulse 1.5s ease infinite; }
+
+  .btn-add-proj {
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    width: 100%;
+    transition: all 0.15s;
+  }
+
+  .btn-add-proj:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  /* Form inputs */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    background: #1a1a30;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 13px;
+    width: 100%;
+  }
+
+  input:focus, select:focus { outline: 2px solid #c792ea44; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .unit-wrap { position: relative; }
+  .unit-wrap input { padding-right: 32px; }
+  .unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
+
+  /* Modal */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000a;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #modal-overlay.open { display: flex; }
+  #modal { width: 340px; }
+
+  /* Dashboard */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .stat-value { font-size: 36px; font-weight: 300; }
+
+  .proj-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .proj-stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .proj-stat-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .proj-stat-hours { font-size: 14px; }
+  .proj-stat-earn { font-size: 11px; color: var(--muted); text-align: right; }
+
+  .bar-track { height: 4px; background: #1e1e3a; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  .rate-row { display: flex; align-items: center; gap: 8px; }
+  .rate-label { font-size: 10px; color: var(--muted); }
+
+  .btn-rate {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 10px;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-rate:hover { border-color: var(--accent); color: var(--accent); }
+
+  .rate-edit { display: none; align-items: center; gap: 6px; }
+  .rate-edit input { width: 90px; padding: 4px 8px; font-size: 11px; }
+  .rate-edit .btn-ok { background: var(--accent); border: none; border-radius: 4px; padding: 4px 10px; color: #0d0d1a; font-size: 10px; font-weight: 700; cursor: pointer; }
+  .rate-edit .btn-cancel { background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--muted); font-size: 10px; cursor: pointer; }
+
+  /* Historial */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+
+  .filter-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .filter-btn.active { }
+
+  .session-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .session-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .session-body { flex: 1; }
+  .session-top { display: flex; justify-content: space-between; align-items: center; }
+  .session-name { font-size: 13px; font-weight: 500; }
+  .session-hours { font-size: 14px; }
+  .session-meta { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; justify-content: space-between; }
+  .session-earn { color: var(--green); }
+
+  .btn-del {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+
+  .btn-del:hover { color: #f08080; }
+
+  .empty-state { text-align: center; color: var(--muted); padding-top: 40px; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-text { font-size: 13px; }
+  .empty-sub { font-size: 11px; margin-top: 4px; }
+
+  input[type="color"] {
+    width: 40px; height: 36px;
+    border: none; background: none;
+    cursor: pointer; padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div>
+    <div id="logo">Kronos</div>
+    <div id="logo-sub">TIME TRACKER</div>
+  </div>
+  <div id="active-badge">
+    <div id="active-dot"></div>
+    <span id="active-name" style="color:var(--muted);font-size:12px"></span>
+    <span id="active-elapsed">00:00:00</span>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div id="tabs">
+  <button class="tab active" data-tab="timer">TIMER</button>
+  <button class="tab" data-tab="manual">MANUAL</button>
+  <button class="tab" data-tab="dashboard">DASHBOARD</button>
+  <button class="tab" data-tab="historial">HISTORIAL</button>
+</div>
+
+<!-- Content -->
+<div id="content">
+
+  <!-- TIMER -->
+  <div id="panel-timer" class="panel active">
+    <div class="card" style="margin-bottom:20px">
+      <div id="timer-display">00:00:00</div>
+      <div id="timer-project-label">Selecciona un proyecto para iniciar</div>
+      <div id="timer-controls">
+        <button class="btn btn-pause" id="btn-pause">⏸ Pausar</button>
+        <button class="btn btn-stop"  id="btn-stop">⏹ Detener</button>
+      </div>
+    </div>
+    <div class="section-label">PROYECTOS</div>
+    <div id="projects-list"></div>
+    <button class="btn-add-proj" id="btn-new-proj" style="margin-top:8px">+ Nuevo proyecto</button>
+  </div>
+
+  <!-- MANUAL -->
+  <div id="panel-manual" class="panel">
+    <div class="card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:18px;color:var(--accent)">Registrar sesión pasada</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>PROYECTO</label>
+          <select id="manual-project">
+            <option value="">Selecciona...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>FECHA</label>
+          <input type="date" id="manual-date">
+        </div>
+        <div class="field">
+          <label>DURACIÓN</label>
+          <div class="row">
+            <div class="unit-wrap">
+              <input type="number" id="manual-hours" placeholder="0" min="0">
+              <span class="unit">h</span>
+            </div>
+            <div class="unit-wrap">
+              <input type="number" id="manual-mins" placeholder="0" min="0" max="59">
+              <span class="unit">min</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>NOTA (opcional)</label>
+          <input type="text" id="manual-note" placeholder="¿En qué trabajaste?">
+        </div>
+        <button class="btn btn-primary" id="btn-save-manual" style="width:100%;padding:12px;margin-top:4px">
+          ✦ Guardar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="panel-dashboard" class="panel" style="max-width:600px">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">HORAS ESTE MES</div>
+        <div class="stat-value" id="dash-hours" style="color:var(--accent)">0h</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">INGRESOS EST.</div>
+        <div class="stat-value" id="dash-earnings" style="color:var(--green)">—</div>
+      </div>
+    </div>
+    <div class="section-label">POR PROYECTO</div>
+    <div id="dash-projects"></div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="panel-historial" class="panel" style="max-width:600px">
+    <div class="filter-bar" id="filter-bar"></div>
+    <div id="sessions-list"></div>
+  </div>
+
+</div>
+
+<!-- Modal nuevo proyecto -->
+<div id="modal-overlay">
+  <div class="card" id="modal">
+    <div style="font-size:16px;font-weight:600;margin-bottom:18px">Nuevo proyecto</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field">
+        <label>NOMBRE</label>
+        <input type="text" id="new-proj-name" placeholder="Nombre del proyecto">
+      </div>
+      <div class="field">
+        <label>COLOR</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="color" id="new-proj-color" value="#c792ea">
+          <div id="color-preview" style="width:20px;height:20px;border-radius:50%;background:#c792ea"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>TARIFA S/. POR HORA (opcional)</label>
+        <input type="number" id="new-proj-rate" placeholder="0">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-ghost" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-modal-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Storage helpers ──────────────────────────────────────────────────────────
+const LS = {
+  get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+const DEFAULT_PROJECTS = [
+  { id: "sorbo",   name: "Sörbo",    color: "#f9c74f", rate: 0 },
+  { id: "belemur", name: "Be.Lemur", color: "#74c0fc", rate: 0 },
+  { id: "inotap",  name: "Inotap",   color: "#f08080", rate: 0 },
+  { id: "general", name: "General",  color: "#a6e3a1", rate: 0 },
+];
+
+let projects  = LS.get("kron_projects") || DEFAULT_PROJECTS;
+let sessions  = LS.get("kron_sessions") || [];
+let active    = null; // { projectId, startTs, accumulated }
+let running   = false;
+let elapsed   = 0;
+let interval  = null;
+let histFilter = "all";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(s) {
+  const h = String(Math.floor(s / 3600)).padStart(2,"0");
+  const m = String(Math.floor((s % 3600) / 60)).padStart(2,"0");
+  const sc = String(s % 60).padStart(2,"0");
+  return `${h}:${m}:${sc}`;
+}
+
+function fmtH(s) { return (s / 3600).toFixed(1) + "h"; }
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function currentMonth() { return new Date().toISOString().slice(0,7); }
+function monthOf(d) { return d?.slice(0,7); }
+
+function getProject(id) { return projects.find(p => p.id === id); }
+
+function saveProjects() { LS.set("kron_projects", projects); }
+function saveSessions() { LS.set("kron_sessions", sessions); }
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "dashboard") renderDashboard();
+    if (btn.dataset.tab === "historial") renderHistorial();
+    if (btn.dataset.tab === "manual") populateManualSelect();
+  });
+});
+
+// ─── Timer ────────────────────────────────────────────────────────────────────
+function startTimer(projectId) {
+  if (active) return;
+  active = { projectId };
+  elapsed = 0;
+  running = true;
+  startTick();
+  renderTimerPanel();
+  updateActiveBadge();
+}
+
+function startTick() {
+  clearInterval(interval);
+  interval = setInterval(() => {
+    if (running) {
+      elapsed++;
+      document.getElementById("timer-display").textContent = fmt(elapsed);
+      document.getElementById("active-elapsed").textContent = fmt(elapsed);
+    }
+  }, 1000);
+}
+
+document.getElementById("btn-pause").addEventListener("click", () => {
+  running = !running;
+  document.getElementById("btn-pause").textContent = running ? "⏸ Pausar" : "▶ Continuar";
+});
+
+document.getElementById("btn-stop").addEventListener("click", () => {
+  if (!active || elapsed < 5) { resetTimer(); return; }
+  clearInterval(interval);
+  const session = {
+    id: Date.now().toString(),
+    projectId: active.projectId,
+    date: todayStr(),
+    duration: elapsed,
+    note: "",
+    type: "timer",
+  };
+  sessions.unshift(session);
+  saveSessions();
+  resetTimer();
+});
+
+function resetTimer() {
+  clearInterval(interval);
+  active = null; elapsed = 0; running = false;
+  document.getElementById("timer-display").textContent = "00:00:00";
+  document.getElementById("timer-display").style.color = "var(--muted)";
+  document.getElementById("timer-project-label").textContent = "Selecciona un proyecto para iniciar";
+  document.getElementById("timer-controls").style.display = "none";
+  document.getElementById("active-badge").style.display = "none";
+  renderTimerPanel();
+}
+
+function updateActiveBadge() {
+  if (!active) return;
+  const proj = getProject(active.projectId);
+  const badge = document.getElementById("active-badge");
+  badge.style.display = "flex";
+  document.getElementById("active-dot").style.background = proj?.color || "var(--accent)";
+  document.getElementById("active-name").textContent = proj?.name || "";
+}
+
+function renderTimerPanel() {
+  const list = document.getElementById("projects-list");
+  list.innerHTML = "";
+  projects.forEach(p => {
+    const isActive = active?.projectId === p.id;
+    const btn = document.createElement("button");
+    btn.className = "proj-item" + (isActive ? " active-proj" : "");
+    btn.style.borderColor = isActive ? p.color : "";
+    btn.style.background = isActive ? p.color + "18" : "";
+    btn.innerHTML = `
+      <div class="proj-dot" style="background:${p.color}"></div>
+      <div style="flex:1">
+        <div class="proj-name">${p.name}</div>
+        ${p.rate > 0 ? `<div class="proj-rate">S/. ${p.rate}/hr</div>` : ""}
+      </div>
+      ${isActive
+        ? `<div class="proj-running" style="color:${p.color}">● en curso</div>`
+        : (!active ? `<div class="proj-hint">▶ iniciar</div>` : "")
+      }
+    `;
+    if (!active) {
+      btn.addEventListener("click", () => {
+        const proj = getProject(p.id);
+        document.getElementById("timer-display").style.color = p.color;
+        document.getElementById("timer-project-label").textContent = "◦ " + p.name;
+        document.getElementById("timer-controls").style.display = "flex";
+        startTimer(p.id);
+      });
+    }
+    list.appendChild(btn);
+  });
+}
+
+// ─── Manual ───────────────────────────────────────────────────────────────────
+document.getElementById("manual-date").value = todayStr();
+
+function populateManualSelect() {
+  const sel = document.getElementById("manual-project");
+  sel.innerHTML = '<option value="">Selecciona...</option>';
+  projects.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("btn-save-manual").addEventListener("click", () => {
+  const projectId = document.getElementById("manual-project").value;
+  const date      = document.getElementById("manual-date").value;
+  const h         = parseInt(document.getElementById("manual-hours").value) || 0;
+  const m         = parseInt(document.getElementById("manual-mins").value) || 0;
+  const note      = document.getElementById("manual-note").value.trim();
+  const duration  = h * 3600 + m * 60;
+  if (!projectId || duration === 0) return;
+  sessions.unshift({
+    id: Date.now().toString(),
+    projectId, date, duration, note, type: "manual",
+  });
+  saveSessions();
+  document.getElementById("manual-hours").value = "";
+  document.getElementById("manual-mins").value  = "";
+  document.getElementById("manual-note").value  = "";
+  // Flash feedback
+  const btn = document.getElementById("btn-save-manual");
+  const orig = btn.textContent;
+  btn.textContent = "✓ Guardado";
+  setTimeout(() => btn.textContent = orig, 1500);
+});
+
+// ─── New project modal ────────────────────────────────────────────────────────
+document.getElementById("btn-new-proj").addEventListener("click", () => {
+  document.getElementById("modal-overlay").classList.add("open");
+});
+
+document.getElementById("btn-modal-cancel").addEventListener("click", () => {
+  document.getElementById("modal-overlay").classList.remove("open");
+});
+
+document.getElementById("new-proj-color").addEventListener("input", e => {
+  document.getElementById("color-preview").style.background = e.target.value;
+});
+
+document.getElementById("btn-modal-save").addEventListener("click", () => {
+  const name  = document.getElementById("new-proj-name").value.trim();
+  const color = document.getElementById("new-proj-color").value;
+  const rate  = parseFloat(document.getElementById("new-proj-rate").value) || 0;
+  if (!name) return;
+  projects.push({ id: Date.now().toString(), name, color, rate });
+  saveProjects();
+  document.getElementById("new-proj-name").value = "";
+  document.getElementById("new-proj-rate").value = "";
+  document.getElementById("modal-overlay").classList.remove("open");
+  renderTimerPanel();
+  populateManualSelect();
+});
+
+// Close modal on overlay click
+document.getElementById("modal-overlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-overlay")) {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+});
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const month = currentMonth();
+  const ms = sessions.filter(s => monthOf(s.date) === month);
+  const totalSecs = ms.reduce((a, s) => a + s.duration, 0);
+
+  const statsByProj = projects.map(p => {
+    const ps = ms.filter(s => s.projectId === p.id);
+    const secs = ps.reduce((a, s) => a + s.duration, 0);
+    return { ...p, secs, hours: secs / 3600, earnings: (secs / 3600) * p.rate };
+  });
+
+  const totalEarnings = statsByProj.reduce((a, p) => a + p.earnings, 0);
+
+  document.getElementById("dash-hours").textContent = fmtH(totalSecs);
+  document.getElementById("dash-earnings").textContent =
+    totalEarnings > 0 ? `S/. ${totalEarnings.toFixed(0)}` : "—";
+
+  const container = document.getElementById("dash-projects");
+  container.innerHTML = "";
+
+  statsByProj.forEach(p => {
+    const pct = totalSecs > 0 ? (p.secs / totalSecs * 100) : 0;
+    const div = document.createElement("div");
+    div.className = "proj-stat";
+    div.innerHTML = `
+      <div class="proj-stat-top">
+        <div class="proj-stat-name">
+          <div class="proj-dot" style="background:${p.color}"></div>
+          ${p.name}
+        </div>
+        <div>
+          <div class="proj-stat-hours" style="color:${p.color};text-align:right">${fmtH(p.secs)}</div>
+          ${p.earnings > 0 ? `<div class="proj-stat-earn">S/. ${p.earnings.toFixed(0)}</div>` : ""}
+        </div>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${p.color}"></div>
+      </div>
+      <div class="rate-row">
+        <span class="rate-label">Tarifa:</span>
+        <button class="btn-rate" data-id="${p.id}">
+          ${p.rate > 0 ? `S/. ${p.rate}/hr` : "+ Agregar tarifa"}
+        </button>
+        <div class="rate-edit" id="rate-edit-${p.id}">
+          <input type="number" id="rate-input-${p.id}" placeholder="S/./hr" value="${p.rate || ""}">
+          <button class="btn-ok" data-id="${p.id}">OK</button>
+          <button class="btn-cancel" data-id="${p.id}">✕</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  // Rate edit events
+  container.querySelectorAll(".btn-rate").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      btn.style.display = "none";
+      document.getElementById(`rate-edit-${id}`).style.display = "flex";
+      document.getElementById(`rate-input-${id}`).focus();
+    });
+  });
+
+  container.querySelectorAll(".btn-ok").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const val = parseFloat(document.getElementById(`rate-input-${id}`).value) || 0;
+      const proj = projects.find(p => p.id === id);
+      if (proj) { proj.rate = val; saveProjects(); }
+      renderDashboard();
+    });
+  });
+
+  container.querySelectorAll(".btn-cancel").forEach(btn => {
+    btn.addEventListener("click", () => renderDashboard());
+  });
+}
+
+// ─── Historial ────────────────────────────────────────────────────────────────
+function renderHistorial() {
+  // Filters
+  const bar = document.getElementById("filter-bar");
+  bar.innerHTML = "";
+  [{ id: "all", name: "Todos", color: null }, ...projects].forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn" + (histFilter === p.id ? " active" : "");
+    btn.textContent = p.name;
+    btn.style.borderColor = histFilter === p.id ? (p.color || "var(--accent)") : "";
+    btn.style.color = histFilter === p.id ? (p.color || "var(--accent)") : "";
+    btn.style.background = histFilter === p.id && p.color ? p.color + "18" : "";
+    btn.addEventListener("click", () => { histFilter = p.id; renderHistorial(); });
+    bar.appendChild(btn);
+  });
+
+  // Sessions
+  const list = document.getElementById("sessions-list");
+  list.innerHTML = "";
+  const filtered = histFilter === "all" ? sessions : sessions.filter(s => s.projectId === histFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">◷</div>
+        <div class="empty-text">Sin sesiones registradas</div>
+        <div class="empty-sub">Inicia un timer o registra manualmente</div>
+      </div>`;
+    return;
+  }
+
+  filtered.forEach(s => {
+    const proj = getProject(s.projectId);
+    const earnings = proj?.rate ? (s.duration / 3600) * proj.rate : 0;
+    const div = document.createElement("div");
+    div.className = "session-item";
+    div.innerHTML = `
+      <div class="session-dot" style="background:${proj?.color || "var(--muted)"}"></div>
+      <div class="session-body">
+        <div class="session-top">
+          <span class="session-name">${proj?.name || "—"}</span>
+          <span class="session-hours" style="color:${proj?.color || "var(--accent)"}">${fmtH(s.duration)}</span>
+        </div>
+        <div class="session-meta">
+          <span>${s.date} · ${s.type === "manual" ? "manual" : "timer"}${s.note ? " · " + s.note : ""}</span>
+          ${earnings > 0 ? `<span class="session-earn">S/. ${earnings.toFixed(0)}</span>` : ""}
+        </div>
+      </div>
+      <button class="btn-del" data-id="${s.id}">✕</button>
+    `;
+    list.appendChild(div);
+  });
+
+  list.querySelectorAll(".btn-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      sessions = sessions.filter(s => s.id !== btn.dataset.id);
+      saveSessions();
+      renderHistorial();
+    });
+  });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderTimerPanel();
+populateManualSelect();
+</script>
+</body>
+</html>
