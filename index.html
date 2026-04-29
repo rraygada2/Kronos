@@ -7,361 +7,168 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg:#0d0d1a; --card:#13132a; --border:#1e1e3a; --text:#e0e0f0; --muted:#5a5a8a; --accent:#c792ea; --green:#a6e3a1; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100vh; display:flex; flex-direction:column; font-size:14px; }
+  input,select,button { font-family:'DM Mono',monospace; }
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-thumb { background:#2a2a4a; border-radius:2px; }
 
-  :root {
-    --bg: #0d0d1a;
-    --card: #13132a;
-    --border: #1e1e3a;
-    --text: #e0e0f0;
-    --muted: #5a5a8a;
-    --accent: #c792ea;
-    --green: #a6e3a1;
-  }
+  #header { padding:16px 24px; border-bottom:1px solid var(--border); background:#0a0a16; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  #logo { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
+  #logo-sub { font-size:11px; color:var(--muted); letter-spacing:2px; margin-top:1px; }
+  #active-badge { display:none; align-items:center; gap:8px; }
+  #active-dot { width:8px; height:8px; border-radius:50%; animation:pulse 1.5s ease infinite; }
+  #active-name { font-size:13px; color:var(--muted); }
+  #active-elapsed { font-size:15px; font-weight:500; color:var(--accent); }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  #tabs { display:flex; border-bottom:1px solid var(--border); background:#0a0a16; padding:0 24px; flex-shrink:0; }
+  .tab { background:transparent; border:none; border-bottom:2px solid transparent; color:var(--muted); padding:14px 18px; cursor:pointer; font-size:12px; font-weight:500; letter-spacing:1px; transition:all 0.15s; }
+  .tab.active { border-bottom-color:var(--accent); color:var(--accent); }
+  .tab:hover:not(.active) { color:var(--text); }
 
-  input, select, textarea, button {
-    font-family: 'DM Mono', monospace;
-  }
+  #content { flex:1; overflow:auto; padding:24px; }
+  .panel { display:none; max-width:540px; margin:0 auto; }
+  .panel.active { display:block; animation:fadeIn 0.25s ease; }
+  #panel-dashboard, #panel-historial { max-width:600px; }
 
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+  @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
-  /* Header */
-  #header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    background: #0a0a16;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+  #timer-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 24px 28px; margin-bottom:20px; text-align:center; transition:border-color 0.4s,box-shadow 0.4s; }
+  #timer-card.focus { border-color:var(--fc,var(--accent)); box-shadow:0 0 56px color-mix(in srgb,var(--fc,var(--accent)) 12%,transparent); }
+  #timer-display { font-size:76px; font-weight:300; letter-spacing:-3px; color:var(--muted); font-variant-numeric:tabular-nums; line-height:1; margin-bottom:10px; transition:color 0.3s; }
+  #timer-project-label { font-size:13px; color:var(--muted); min-height:20px; transition:color 0.3s; margin-bottom:6px; }
+  #timer-earning { display:none; font-size:32px; font-weight:300; color:var(--green); margin-bottom:2px; animation:slideUp 0.3s ease; }
+  #timer-earning-label { display:none; font-size:10px; color:var(--muted); letter-spacing:1.5px; margin-bottom:22px; }
+  #timer-spacer { height:22px; }
+  #timer-saved { display:none; font-size:13px; color:var(--green); margin:0 0 18px; animation:slideUp 0.3s ease; padding:10px 16px; background:#a6e3a115; border:1px solid #a6e3a130; border-radius:8px; }
+  #timer-controls { display:none; justify-content:center; gap:10px; }
 
-  #logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-  #logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  #quick-manual { display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--border); animation:slideUp 0.25s ease; text-align:left; }
+  .quick-label { font-size:10px; color:var(--muted); letter-spacing:1.5px; margin-bottom:14px; }
 
-  #active-badge {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-  }
+  .btn { border:none; border-radius:8px; padding:11px 24px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.15s; }
+  .btn:hover { opacity:0.82; transform:translateY(-1px); }
+  .btn:active { transform:translateY(0); }
+  .btn-pause   { background:#2a2a4a; border:1px solid #3a3a5a; color:var(--text); }
+  .btn-stop    { background:#2a1a1a; border:1px solid #f0808055; color:#f08080; }
+  .btn-primary { background:var(--accent); color:#0d0d1a; font-weight:700; }
+  .btn-ghost   { background:transparent; border:1px solid var(--border); color:var(--muted); }
+  .btn-ghost:hover { border-color:var(--text); color:var(--text); opacity:1; }
+  .btn-danger  { background:#2a1a1a; border:1px solid #f0808055; color:#f08080; }
 
-  #active-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    animation: pulse 1.5s ease infinite;
-  }
+  .section-label { font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:12px; }
 
-  #active-elapsed { font-size: 14px; font-weight: 500; color: var(--accent); }
+  #projects-list { display:flex; flex-direction:column; gap:8px; }
+  .proj-row { display:flex; align-items:stretch; gap:8px; }
+  .proj-item { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.15s; text-align:left; flex:1; color:var(--text); }
+  .proj-item:hover:not([disabled]) { border-color:#3a3a5a; transform:translateY(-1px); }
+  .proj-item[disabled] { cursor:default; opacity:0.6; pointer-events:none; }
+  .proj-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .proj-name { font-size:14px; font-weight:500; }
+  .proj-meta { font-size:11px; color:var(--muted); }
+  .proj-month { font-size:11px; }
+  .proj-hint { font-size:11px; color:var(--muted); flex-shrink:0; }
+  .proj-running { font-size:11px; flex-shrink:0; animation:pulse 1.5s ease infinite; }
+  .btn-del-proj { background:transparent; border:1px solid var(--border); border-radius:10px; width:42px; color:var(--muted); cursor:pointer; font-size:15px; flex-shrink:0; transition:all 0.15s; display:flex; align-items:center; justify-content:center; align-self:stretch; }
+  .btn-del-proj:hover { border-color:#f08080; color:#f08080; background:#2a1a1a; }
+  .btn-add-proj { background:transparent; border:1px dashed var(--border); border-radius:10px; padding:13px 18px; color:var(--muted); cursor:pointer; font-size:13px; width:100%; transition:all 0.15s; margin-top:4px; }
+  .btn-add-proj:hover { border-color:var(--accent); color:var(--accent); }
 
-  /* Tabs */
-  #tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    background: #0a0a16;
-    padding: 0 24px;
-  }
+  .welcome-box { background:var(--card); border:1px dashed #3a3a6a; border-radius:14px; padding:36px 28px; text-align:center; margin-bottom:8px; }
+  .welcome-icon { font-size:36px; margin-bottom:16px; }
+  .welcome-title { font-size:16px; font-weight:500; margin-bottom:14px; }
+  .welcome-steps { font-size:13px; color:var(--muted); line-height:2.4; }
 
-  .tab {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--muted);
-    padding: 12px 16px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    transition: all 0.15s;
-  }
+  .field { display:flex; flex-direction:column; gap:7px; }
+  .field label { font-size:11px; color:var(--muted); letter-spacing:1.5px; }
+  input[type="text"], input[type="number"], input[type="date"], select { background:#1a1a30; border:1px solid var(--border); border-radius:8px; padding:11px 13px; color:var(--text); font-size:13px; width:100%; transition:border-color 0.15s; }
+  input:focus, select:focus { outline:none; border-color:var(--accent); }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  .unit-wrap { position:relative; }
+  .unit-wrap input { padding-right:34px; }
+  .unit { position:absolute; right:11px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--muted); pointer-events:none; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
 
-  .tab.active {
-    border-bottom-color: var(--accent);
-    color: var(--accent);
-  }
+  .modal-overlay { display:none; position:fixed; inset:0; background:#00000099; align-items:center; justify-content:center; z-index:100; padding:20px; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:#16162e; border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; animation:slideUp 0.25s ease; }
+  .modal-title { font-size:16px; font-weight:600; margin-bottom:20px; }
 
-  /* Content */
-  #content {
-    flex: 1;
-    overflow: auto;
-    padding: 24px;
-  }
+  /* Dashboard nav */
+  .dash-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .dash-nav-btn { background:transparent; border:1px solid var(--border); border-radius:8px; width:36px; height:36px; color:var(--muted); cursor:pointer; font-size:18px; transition:all 0.15s; display:flex; align-items:center; justify-content:center; }
+  .dash-nav-btn:hover:not([disabled]) { border-color:var(--text); color:var(--text); }
+  .dash-nav-btn[disabled] { opacity:0.25; cursor:default; }
 
-  .panel { display: none; max-width: 520px; margin: 0 auto; }
-  .panel.active { display: block; animation: fadeIn 0.25s ease; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:center; }
+  .stat-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; margin-bottom:8px; }
+  .stat-value { font-size:34px; font-weight:300; line-height:1; }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: none; }
-  }
+  .proj-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+  .proj-stat-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .proj-stat-name { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
+  .proj-stat-right { text-align:right; }
+  .proj-stat-hours { font-size:15px; }
+  .proj-stat-earn { font-size:12px; color:var(--green); margin-top:2px; }
+  .bar-track { height:4px; background:#1e1e3a; border-radius:2px; overflow:hidden; margin-bottom:12px; }
+  .bar-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
+  .rate-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .rate-label { font-size:11px; color:var(--muted); }
+  .btn-rate { background:transparent; border:1px solid var(--border); border-radius:4px; padding:4px 11px; color:var(--muted); font-size:11px; cursor:pointer; transition:all 0.15s; font-family:'DM Mono',monospace; }
+  .btn-rate:hover { border-color:var(--accent); color:var(--accent); }
+  .rate-edit { display:none; align-items:center; gap:6px; }
+  .rate-edit input { width:95px; padding:5px 9px; font-size:12px; }
+  .rate-edit .btn-ok { background:var(--accent); border:none; border-radius:4px; padding:5px 12px; color:#0d0d1a; font-size:11px; font-weight:700; cursor:pointer; font-family:'DM Mono',monospace; }
+  .rate-edit .btn-cancel { background:transparent; border:1px solid var(--border); border-radius:4px; padding:5px 9px; color:var(--muted); font-size:11px; cursor:pointer; font-family:'DM Mono',monospace; }
+  .dash-tip { font-size:11px; color:var(--muted); margin-top:12px; padding:10px 14px; background:#c792ea0d; border:1px solid #c792ea22; border-radius:8px; line-height:1.7; }
+  .dash-empty { text-align:center; color:var(--muted); padding:32px 0; font-size:12px; line-height:2.4; }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
-  }
+  /* Historic section */
+  .historic-summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .historic-mini { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+  .proj-period { font-size:10px; color:var(--muted); margin-top:6px; letter-spacing:0.5px; }
 
-  /* Cards */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-  }
+  .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .filter-btn { background:transparent; border:1px solid var(--border); border-radius:20px; padding:6px 15px; color:var(--muted); font-size:12px; cursor:pointer; transition:all 0.15s; font-family:'DM Mono',monospace; }
+  .session-item { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .session-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .session-body { flex:1; min-width:0; }
+  .session-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .session-name { font-size:14px; font-weight:500; }
+  .session-hours { font-size:14px; flex-shrink:0; }
+  .session-meta { font-size:11px; color:var(--muted); margin-top:4px; display:flex; justify-content:space-between; gap:8px; }
+  .session-note { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .session-earn { color:var(--green); flex-shrink:0; }
+  .btn-del { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:4px 6px; transition:color 0.15s; flex-shrink:0; }
+  .btn-del:hover { color:#f08080; }
+  .empty-state { text-align:center; color:var(--muted); padding-top:48px; }
+  .empty-icon { font-size:36px; margin-bottom:12px; }
+  .empty-text { font-size:14px; margin-bottom:4px; }
+  .empty-sub { font-size:12px; }
+  input[type="color"] { width:40px; height:40px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px; }
 
-  /* Timer display */
-  #timer-display {
-    font-size: 64px;
-    font-weight: 300;
-    letter-spacing: -2px;
-    color: var(--muted);
-    text-align: center;
-    margin-bottom: 8px;
-    font-variant-numeric: tabular-nums;
-    transition: color 0.3s;
-  }
+  .divider { height:1px; background:var(--border); margin:24px 0; }
 
-  #timer-project-label {
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    min-height: 18px;
-  }
-
-  #timer-controls {
-    display: none;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 4px;
-  }
-
-  .btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 24px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: opacity 0.15s;
-  }
-
-  .btn:hover { opacity: 0.8; }
-  .btn-pause { background: #2a2a4a; border: 1px solid #3a3a5a; color: var(--text); }
-  .btn-stop  { background: #2a1a1a; border: 1px solid #f0808055; color: #f08080; }
-  .btn-primary { background: var(--accent); color: #0d0d1a; font-weight: 700; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-
-  /* Project list */
-  #projects-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .proj-item {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: left;
-    width: 100%;
-    color: var(--text);
-  }
-
-  .proj-item:hover { border-color: #3a3a5a; }
-  .proj-item.active-proj { }
-
-  .proj-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .proj-name { flex: 1; font-size: 14px; font-weight: 500; }
-  .proj-rate { font-size: 11px; color: var(--muted); }
-  .proj-hint { font-size: 11px; color: var(--muted); }
-  .proj-running { font-size: 11px; animation: pulse 1.5s ease infinite; }
-
-  .btn-add-proj {
-    background: transparent;
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 12px 18px;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-    width: 100%;
-    transition: all 0.15s;
-  }
-
-  .btn-add-proj:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* Section label */
-  .section-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    margin-bottom: 14px;
-  }
-
-  /* Form inputs */
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; }
-
-  input[type="text"],
-  input[type="number"],
-  input[type="date"],
-  select {
-    background: #1a1a30;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 12px;
-    color: var(--text);
-    font-size: 13px;
-    width: 100%;
-  }
-
-  input:focus, select:focus { outline: 2px solid #c792ea44; }
-
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-
-  .unit-wrap { position: relative; }
-  .unit-wrap input { padding-right: 32px; }
-  .unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
-
-  /* Modal */
-  #modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #000a;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-  }
-
-  #modal-overlay.open { display: flex; }
-  #modal { width: 340px; }
-
-  /* Dashboard */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-  }
-
-  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
-  .stat-value { font-size: 36px; font-weight: 300; }
-
-  .proj-stat {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-
-  .proj-stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .proj-stat-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
-  .proj-stat-hours { font-size: 14px; }
-  .proj-stat-earn { font-size: 11px; color: var(--muted); text-align: right; }
-
-  .bar-track { height: 4px; background: #1e1e3a; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
-  .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
-
-  .rate-row { display: flex; align-items: center; gap: 8px; }
-  .rate-label { font-size: 10px; color: var(--muted); }
-
-  .btn-rate {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 3px 10px;
-    color: var(--muted);
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .btn-rate:hover { border-color: var(--accent); color: var(--accent); }
-
-  .rate-edit { display: none; align-items: center; gap: 6px; }
-  .rate-edit input { width: 90px; padding: 4px 8px; font-size: 11px; }
-  .rate-edit .btn-ok { background: var(--accent); border: none; border-radius: 4px; padding: 4px 10px; color: #0d0d1a; font-size: 10px; font-weight: 700; cursor: pointer; }
-  .rate-edit .btn-cancel { background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--muted); font-size: 10px; cursor: pointer; }
-
-  /* Historial */
-  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-
-  .filter-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 14px;
-    color: var(--muted);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'DM Mono', monospace;
-  }
-
-  .filter-btn.active { }
-
-  .session-item {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  .session-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .session-body { flex: 1; }
-  .session-top { display: flex; justify-content: space-between; align-items: center; }
-  .session-name { font-size: 13px; font-weight: 500; }
-  .session-hours { font-size: 14px; }
-  .session-meta { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; justify-content: space-between; }
-  .session-earn { color: var(--green); }
-
-  .btn-del {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 4px 6px;
-    transition: color 0.15s;
-    line-height: 1;
-  }
-
-  .btn-del:hover { color: #f08080; }
-
-  .empty-state { text-align: center; color: var(--muted); padding-top: 40px; }
-  .empty-icon { font-size: 32px; margin-bottom: 8px; }
-  .empty-text { font-size: 13px; }
-  .empty-sub { font-size: 11px; margin-top: 4px; }
-
-  input[type="color"] {
-    width: 40px; height: 36px;
-    border: none; background: none;
-    cursor: pointer; padding: 0;
+  @media (max-width:520px) {
+    #content { padding:14px; }
+    #timer-display { font-size:54px; letter-spacing:-2px; }
+    #timer-earning { font-size:24px; }
+    .tab { padding:12px 10px; font-size:11px; letter-spacing:0.5px; }
+    #header { padding:14px 16px; }
+    .stats-grid, .historic-summary { grid-template-columns:1fr; }
+    .stat-value { font-size:28px; }
+    .modal-box { padding:22px 18px; }
+    .field label { font-size:12px; }
+    input[type="text"], input[type="number"], input[type="date"], select { font-size:14px; padding:12px 13px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div id="header">
   <div>
     <div id="logo">Kronos</div>
@@ -369,605 +176,594 @@
   </div>
   <div id="active-badge">
     <div id="active-dot"></div>
-    <span id="active-name" style="color:var(--muted);font-size:12px"></span>
+    <span id="active-name"></span>
     <span id="active-elapsed">00:00:00</span>
   </div>
 </div>
 
-<!-- Tabs -->
 <div id="tabs">
   <button class="tab active" data-tab="timer">TIMER</button>
-  <button class="tab" data-tab="manual">MANUAL</button>
   <button class="tab" data-tab="dashboard">DASHBOARD</button>
   <button class="tab" data-tab="historial">HISTORIAL</button>
 </div>
 
-<!-- Content -->
 <div id="content">
 
   <!-- TIMER -->
   <div id="panel-timer" class="panel active">
-    <div class="card" style="margin-bottom:20px">
+    <div id="timer-card">
       <div id="timer-display">00:00:00</div>
       <div id="timer-project-label">Selecciona un proyecto para iniciar</div>
-      <div id="timer-earning" style="display:none;text-align:center;font-size:22px;font-weight:300;color:var(--green);margin-bottom:6px;transition:all 0.3s"></div>
-      <div id="timer-saved" style="display:none;text-align:center;font-size:12px;color:var(--green);margin-bottom:12px;animation:fadeIn 0.3s ease"></div>
+      <div id="timer-earning"></div>
+      <div id="timer-earning-label">GANADO EN ESTA SESIÓN</div>
+      <div id="timer-spacer"></div>
+      <div id="timer-saved"></div>
       <div id="timer-controls">
         <button class="btn btn-pause" id="btn-pause">⏸ Pausar</button>
         <button class="btn btn-stop"  id="btn-stop">⏹ Detener</button>
       </div>
-    </div>
-    <div class="section-label">PROYECTOS</div>
-    <div id="projects-list"></div>
-    <button class="btn-add-proj" id="btn-new-proj" style="margin-top:8px">+ Nuevo proyecto</button>
-  </div>
-
-  <!-- MANUAL -->
-  <div id="panel-manual" class="panel">
-    <div class="card">
-      <div style="font-size:14px;font-weight:600;margin-bottom:18px;color:var(--accent)">Registrar sesión pasada</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="field">
-          <label>PROYECTO</label>
-          <select id="manual-project">
-            <option value="">Selecciona...</option>
-          </select>
+      <div id="quick-manual">
+        <div class="quick-label">¿OLVIDASTE INICIAR EL TIMER? REGISTRA AQUÍ</div>
+        <div class="row" style="margin-bottom:10px">
+          <div class="field"><label>PROYECTO</label><select id="qm-project"><option value="">Selecciona...</option></select></div>
+          <div class="field"><label>FECHA</label><input type="date" id="qm-date"></div>
         </div>
-        <div class="field">
-          <label>FECHA</label>
-          <input type="date" id="manual-date">
+        <div class="row" style="margin-bottom:10px">
+          <div class="unit-wrap"><input type="number" id="qm-hours" placeholder="0" min="0"><span class="unit">h</span></div>
+          <div class="unit-wrap"><input type="number" id="qm-mins" placeholder="0" min="0" max="59"><span class="unit">min</span></div>
         </div>
-        <div class="field">
-          <label>DURACIÓN</label>
-          <div class="row">
-            <div class="unit-wrap">
-              <input type="number" id="manual-hours" placeholder="0" min="0">
-              <span class="unit">h</span>
-            </div>
-            <div class="unit-wrap">
-              <input type="number" id="manual-mins" placeholder="0" min="0" max="59">
-              <span class="unit">min</span>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>NOTA (opcional)</label>
-          <input type="text" id="manual-note" placeholder="¿En qué trabajaste?">
-        </div>
-        <button class="btn btn-primary" id="btn-save-manual" style="width:100%;padding:12px;margin-top:4px">
-          ✦ Guardar sesión
-        </button>
+        <input type="text" id="qm-note" placeholder="Nota opcional..." style="margin-bottom:12px">
+        <button class="btn btn-primary" id="btn-qm-save" style="width:100%">✦ Guardar sesión</button>
       </div>
     </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="section-label" style="margin-bottom:0">PROYECTOS</div>
+      <button id="btn-toggle-manual" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:color 0.15s;padding:4px 0">+ registrar manualmente</button>
+    </div>
+    <div id="projects-list"></div>
+    <button class="btn-add-proj" id="btn-new-proj">+ Nuevo proyecto</button>
   </div>
 
   <!-- DASHBOARD -->
-  <div id="panel-dashboard" class="panel" style="max-width:600px">
+  <div id="panel-dashboard" class="panel">
+
+    <!-- Navegador de mes -->
+    <div class="dash-nav">
+      <button class="dash-nav-btn" id="dash-prev">&#8249;</button>
+      <div style="text-align:center">
+        <div id="dash-month-label" style="font-size:13px;font-weight:500;letter-spacing:1px"></div>
+        <div id="dash-month-sub" style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;min-height:14px"></div>
+      </div>
+      <button class="dash-nav-btn" id="dash-next">&#8250;</button>
+    </div>
+
+    <!-- Stats mes -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">HORAS ESTE MES</div>
-        <div class="stat-value" id="dash-hours" style="color:var(--accent)">0h</div>
+        <div class="stat-label">HORAS</div>
+        <div class="stat-value" id="dash-hours" style="color:var(--accent)">&#8212;</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">INGRESOS EST.</div>
-        <div class="stat-value" id="dash-earnings" style="color:var(--green)">—</div>
+        <div class="stat-value" id="dash-earnings" style="color:var(--green)">&#8212;</div>
       </div>
     </div>
     <div class="section-label">POR PROYECTO</div>
     <div id="dash-projects"></div>
+
+    <!-- Total historico -->
+    <div id="dash-historic-section" style="display:none">
+      <div class="divider"></div>
+      <div class="section-label">TOTAL HISTÓRICO</div>
+      <div class="historic-summary" id="dash-historic-summary"></div>
+      <div id="dash-historic"></div>
+    </div>
+
   </div>
 
   <!-- HISTORIAL -->
-  <div id="panel-historial" class="panel" style="max-width:600px">
+  <div id="panel-historial" class="panel">
     <div class="filter-bar" id="filter-bar"></div>
     <div id="sessions-list"></div>
   </div>
 
 </div>
 
-<!-- Modal nuevo proyecto -->
-<div id="modal-overlay">
-  <div class="card" id="modal">
-    <div style="font-size:16px;font-weight:600;margin-bottom:18px">Nuevo proyecto</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div class="field">
-        <label>NOMBRE</label>
-        <input type="text" id="new-proj-name" placeholder="Nombre del proyecto">
-      </div>
+<!-- Modal: Nuevo proyecto -->
+<div id="modal-new" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">Nuevo proyecto</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label>NOMBRE</label><input type="text" id="new-proj-name" placeholder="ej: Mi proyecto..."></div>
       <div class="field">
         <label>COLOR</label>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
           <input type="color" id="new-proj-color" value="#c792ea">
-          <div id="color-preview" style="width:20px;height:20px;border-radius:50%;background:#c792ea"></div>
+          <div id="color-preview" style="width:22px;height:22px;border-radius:50%;background:#c792ea;border:2px solid #2a2a4a;flex-shrink:0"></div>
+          <span id="color-hex" style="font-size:11px;color:var(--muted)">#c792ea</span>
         </div>
       </div>
       <div class="field">
-        <label>TARIFA S/. POR HORA (opcional)</label>
-        <input type="number" id="new-proj-rate" placeholder="0">
+        <label>TARIFA S/. / HORA <span style="color:var(--muted);font-weight:300">(opcional)</span></label>
+        <div class="unit-wrap"><input type="number" id="new-proj-rate" placeholder="0.00" min="0" step="0.5"><span class="unit">S/.</span></div>
+        <span style="font-size:11px;color:var(--muted)">También puedes configurarlo luego en el Dashboard</span>
       </div>
-      <div class="row" style="margin-top:8px">
+      <div class="row" style="margin-top:4px">
         <button class="btn btn-ghost" id="btn-modal-cancel">Cancelar</button>
-        <button class="btn btn-primary" id="btn-modal-save">Guardar</button>
+        <button class="btn btn-primary" id="btn-modal-save">Crear proyecto</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Modal: Eliminar proyecto -->
+<div id="modal-del" class="modal-overlay">
+  <div class="modal-box" style="border-color:#f0808033">
+    <div class="modal-title" style="color:#f08080">Eliminar proyecto</div>
+    <p id="del-modal-text" style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:24px"></p>
+    <div class="row">
+      <button class="btn btn-ghost" id="btn-del-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="btn-del-confirm">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ─── Storage helpers ──────────────────────────────────────────────────────────
 const LS = {
-  get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  get:   k   => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set:   (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
-// ─── State ────────────────────────────────────────────────────────────────────
-const DEFAULT_PROJECTS = [];
-
-let projects  = LS.get("kron_projects") || DEFAULT_PROJECTS;
-let sessions  = LS.get("kron_sessions") || [];
-let active    = null; // { projectId, startTs, accumulated }
-let running   = false;
-let elapsed   = 0;
-let interval  = null;
+let projects   = LS.get("kron_projects") || [];
+let sessions   = LS.get("kron_sessions") || [];
+let active     = null;
+let running    = false;
+let elapsed    = 0;
+let interval   = null;
 let histFilter = "all";
+let pendingDel = null;
+let quickOpen  = false;
+let dashMonth  = currentMonth();
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(s) {
-  const h = String(Math.floor(s / 3600)).padStart(2,"0");
-  const m = String(Math.floor((s % 3600) / 60)).padStart(2,"0");
-  const sc = String(s % 60).padStart(2,"0");
-  return `${h}:${m}:${sc}`;
+  return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor((s%3600)/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+}
+function fmtH(s) {
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60);
+  if (h===0) return m+"min";
+  if (m===0) return h+"h";
+  return h+"h "+m+"min";
+}
+function todayStr()     { return new Date().toISOString().slice(0,10); }
+function currentMonth() { return new Date().toISOString().slice(0,7); }
+function monthOf(d)     { return d ? d.slice(0,7) : null; }
+function fmtMonthLabel(ym) {
+  const parts = ym.split("-");
+  const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1);
+  return d.toLocaleDateString("es-PE",{month:"long",year:"numeric"}).toUpperCase();
+}
+function getProject(id)  { return projects.find(p=>p.id===id); }
+function saveProjects()  { LS.set("kron_projects", projects); }
+function saveSessions()  { LS.set("kron_sessions", sessions); }
+function monthSecs(id)   { return sessions.filter(s=>s.projectId===id&&monthOf(s.date)===currentMonth()).reduce((a,s)=>a+s.duration,0); }
+function availableMonths() {
+  const set = new Set(sessions.map(s=>monthOf(s.date)).filter(Boolean));
+  set.add(currentMonth());
+  return [...set].sort();
 }
 
-function fmtH(s) { return (s / 3600).toFixed(1) + "h"; }
-
-function todayStr() { return new Date().toISOString().slice(0,10); }
-function currentMonth() { return new Date().toISOString().slice(0,7); }
-function monthOf(d) { return d?.slice(0,7); }
-
-function getProject(id) { return projects.find(p => p.id === id); }
-
-function saveProjects() { LS.set("kron_projects", projects); }
-function saveSessions() { LS.set("kron_sessions", sessions); }
-
-// ─── Tabs ─────────────────────────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
-    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "dashboard") renderDashboard();
-    if (btn.dataset.tab === "historial") renderHistorial();
-    if (btn.dataset.tab === "manual") populateManualSelect();
+    document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab==="dashboard") renderDashboard();
+    if (btn.dataset.tab==="historial") renderHistorial();
   });
 });
 
-// ─── Timer ────────────────────────────────────────────────────────────────────
+// ── Timer ─────────────────────────────────────────────────────────────────────
 function startTimer(projectId) {
   if (active) return;
-  active = { projectId };
-  elapsed = 0;
-  running = true;
-  startTick();
-  renderTimerPanel();
+  active={projectId}; elapsed=0; running=true;
+  const proj=getProject(projectId);
+  const card=document.getElementById("timer-card");
+  card.classList.add("focus");
+  card.style.setProperty("--fc", proj?.color||"var(--accent)");
+  document.getElementById("timer-display").style.color        = proj?.color||"var(--accent)";
+  document.getElementById("timer-project-label").textContent  = "◦ "+(proj?.name||"");
+  document.getElementById("timer-project-label").style.color  = proj?.color||"var(--accent)";
+  document.getElementById("timer-controls").style.display     = "flex";
+  document.getElementById("timer-spacer").style.display       = "none";
+  document.getElementById("btn-toggle-manual").style.visibility = "hidden";
+  if (proj?.rate>0) {
+    document.getElementById("timer-earning").style.display      = "block";
+    document.getElementById("timer-earning-label").style.display= "block";
+    document.getElementById("timer-earning").textContent        = "S/. 0.00";
+  }
   updateActiveBadge();
-}
-
-function startTick() {
   clearInterval(interval);
-  interval = setInterval(() => {
-    if (running) {
-      elapsed++;
-      document.getElementById("timer-display").textContent = fmt(elapsed);
-      document.getElementById("active-elapsed").textContent = fmt(elapsed);
-
-      // Monto en tiempo real
-      if (active) {
-        const proj = getProject(active.projectId);
-        const earningEl = document.getElementById("timer-earning");
-        if (proj?.rate > 0) {
-          const earned = (elapsed / 3600) * proj.rate;
-          earningEl.style.display = "block";
-          earningEl.textContent = `S/. ${earned.toFixed(2)}`;
-        } else {
-          earningEl.style.display = "none";
-        }
-      }
-    }
-  }, 1000);
-}
-
-document.getElementById("btn-pause").addEventListener("click", () => {
-  running = !running;
-  document.getElementById("btn-pause").textContent = running ? "⏸ Pausar" : "▶ Continuar";
-});
-
-document.getElementById("btn-stop").addEventListener("click", () => {
-  if (!active || elapsed < 5) { resetTimer(); return; }
-  clearInterval(interval);
-  const proj = getProject(active.projectId);
-  const session = {
-    id: Date.now().toString(),
-    projectId: active.projectId,
-    date: todayStr(),
-    duration: elapsed,
-    note: "",
-    type: "timer",
-  };
-  sessions.unshift(session);
-  saveSessions();
-
-  // Mensaje de confirmación
-  const mins = Math.floor(elapsed / 60);
-  const hrs  = Math.floor(mins / 60);
-  const rem  = mins % 60;
-  const timeStr = hrs > 0 ? `${hrs}h ${rem}min` : `${mins}min`;
-  const earned = proj?.rate > 0 ? ` · S/. ${((elapsed / 3600) * proj.rate).toFixed(2)}` : "";
-  const savedEl = document.getElementById("timer-saved");
-  savedEl.textContent = `✓ Guardado — ${timeStr} en ${proj?.name || "—"}${earned}`;
-  savedEl.style.display = "block";
-  document.getElementById("timer-earning").style.display = "none";
-  document.getElementById("timer-controls").style.display = "none";
-  document.getElementById("timer-display").textContent = "00:00:00";
-  document.getElementById("timer-display").style.color = "var(--muted)";
-  document.getElementById("timer-project-label").textContent = "Selecciona un proyecto para iniciar";
-  document.getElementById("active-badge").style.display = "none";
-  active = null; elapsed = 0; running = false;
-
-  setTimeout(() => {
-    savedEl.style.display = "none";
-    renderTimerPanel();
-  }, 3000);
-});
-
-function resetTimer() {
-  clearInterval(interval);
-  active = null; elapsed = 0; running = false;
-  document.getElementById("timer-display").textContent = "00:00:00";
-  document.getElementById("timer-display").style.color = "var(--muted)";
-  document.getElementById("timer-project-label").textContent = "Selecciona un proyecto para iniciar";
-  document.getElementById("timer-controls").style.display = "none";
-  document.getElementById("active-badge").style.display = "none";
+  interval = setInterval(()=>{
+    if (!running) return;
+    elapsed++;
+    document.getElementById("timer-display").textContent   = fmt(elapsed);
+    document.getElementById("active-elapsed").textContent  = fmt(elapsed);
+    const p=active?getProject(active.projectId):null;
+    if (p?.rate>0) document.getElementById("timer-earning").textContent="S/. "+((elapsed/3600)*p.rate).toFixed(2);
+  },1000);
   renderTimerPanel();
 }
 
+document.getElementById("btn-pause").addEventListener("click",()=>{
+  running=!running;
+  document.getElementById("btn-pause").textContent=running?"⏸ Pausar":"▶ Continuar";
+});
+
+document.getElementById("btn-stop").addEventListener("click",()=>{
+  if (!active||elapsed<5){resetTimer();return;}
+  clearInterval(interval);
+  const proj=getProject(active.projectId);
+  sessions.unshift({id:Date.now().toString(),projectId:active.projectId,date:todayStr(),duration:elapsed,note:"",type:"timer"});
+  saveSessions();
+  const earned=proj?.rate>0?" · S/. "+((elapsed/3600)*proj.rate).toFixed(2):"";
+  const savedEl=document.getElementById("timer-saved");
+  savedEl.textContent="✓ Guardado — "+fmtH(elapsed)+" en "+(proj?.name||"—")+earned;
+  savedEl.style.display="block";
+  resetVisuals(); active=null; elapsed=0; running=false;
+  renderTimerPanel();
+  setTimeout(()=>{savedEl.style.display="none";},4500);
+});
+
+function resetVisuals() {
+  document.getElementById("timer-display").textContent        = "00:00:00";
+  document.getElementById("timer-display").style.color        = "var(--muted)";
+  document.getElementById("timer-project-label").textContent  = "Selecciona un proyecto para iniciar";
+  document.getElementById("timer-project-label").style.color  = "var(--muted)";
+  document.getElementById("timer-earning").style.display      = "none";
+  document.getElementById("timer-earning-label").style.display= "none";
+  document.getElementById("timer-spacer").style.display       = "";
+  document.getElementById("timer-controls").style.display     = "none";
+  document.getElementById("active-badge").style.display       = "none";
+  document.getElementById("timer-card").classList.remove("focus");
+  document.getElementById("btn-toggle-manual").style.visibility="visible";
+}
+function resetTimer() { clearInterval(interval); active=null; elapsed=0; running=false; resetVisuals(); renderTimerPanel(); }
 function updateActiveBadge() {
   if (!active) return;
-  const proj = getProject(active.projectId);
-  const badge = document.getElementById("active-badge");
-  badge.style.display = "flex";
-  document.getElementById("active-dot").style.background = proj?.color || "var(--accent)";
-  document.getElementById("active-name").textContent = proj?.name || "";
+  const proj=getProject(active.projectId);
+  document.getElementById("active-badge").style.display ="flex";
+  document.getElementById("active-dot").style.background=proj?.color||"var(--accent)";
+  document.getElementById("active-name").textContent    =proj?.name||"";
 }
 
+// ── Render projects ───────────────────────────────────────────────────────────
 function renderTimerPanel() {
-  const list = document.getElementById("projects-list");
-  list.innerHTML = "";
-
-  if (projects.length === 0) {
-    list.innerHTML = `
-      <div style="
-        background:#13132a;
-        border:1px dashed #3a3a6a;
-        border-radius:12px;
-        padding:28px 24px;
-        text-align:center;
-        margin-bottom:8px;
-      ">
-        <div style="font-size:28px;margin-bottom:12px">⏱</div>
-        <div style="font-size:14px;color:#e0e0f0;font-weight:500;margin-bottom:8px">
-          Bienvenido a Kronos
-        </div>
-        <div style="font-size:12px;color:#5a5a8a;line-height:1.8">
-          Para empezar, crea tu primer proyecto:<br>
-          <span style="color:#c792ea">1.</span> Clic en <strong style="color:#e0e0f0">+ Nuevo proyecto</strong> aquí abajo<br>
-          <span style="color:#c792ea">2.</span> Dale un nombre y elige un color<br>
-          <span style="color:#c792ea">3.</span> Agrega tu tarifa por hora (opcional)<br>
-          <span style="color:#c792ea">4.</span> Pulsa el proyecto para iniciar el timer
-        </div>
-      </div>
-    `;
-    return;
+  const list=document.getElementById("projects-list");
+  list.innerHTML="";
+  if (projects.length===0) {
+    list.innerHTML='<div class="welcome-box"><div class="welcome-icon">⏱</div><div class="welcome-title">Bienvenido a Kronos</div><div class="welcome-steps"><span style="color:var(--accent)">1.</span> Clic en <strong style="color:var(--text)">+ Nuevo proyecto</strong> aquí abajo<br><span style="color:var(--accent)">2.</span> Dale un nombre y elige un color<br><span style="color:var(--accent)">3.</span> Agrega tu tarifa S/./hr <span style="color:var(--muted)">(opcional)</span><br><span style="color:var(--accent)">4.</span> Pulsa el proyecto para iniciar el timer</div></div>';
+    populateQMSelect(); return;
   }
-
-  projects.forEach(p => {
-    const isActive = active?.projectId === p.id;
-
-    // Total acumulado este mes
-    const month = currentMonth();
-    const projSessions = sessions.filter(s => s.projectId === p.id && monthOf(s.date) === month);
-    const totalSecs = projSessions.reduce((a, s) => a + s.duration, 0);
-    const totalEarned = p.rate > 0 ? (totalSecs / 3600) * p.rate : 0;
-    const hasData = totalSecs > 0;
-
-    const wrapper = document.createElement("div");
-    wrapper.style.cssText = "display:flex;align-items:center;gap:8px;";
-
-    const btn = document.createElement("button");
-    btn.className = "proj-item" + (isActive ? " active-proj" : "");
-    btn.style.borderColor = isActive ? p.color : "";
-    btn.style.background = isActive ? p.color + "18" : "";
-    btn.style.flex = "1";
-    btn.innerHTML = `
-      <div class="proj-dot" style="background:${p.color}"></div>
-      <div style="flex:1">
-        <div class="proj-name">${p.name}</div>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:2px">
-          ${p.rate > 0 ? `<div class="proj-rate">S/. ${p.rate}/hr</div>` : ""}
-          ${hasData ? `<div style="font-size:11px;color:${p.color};opacity:0.8">${fmtH(totalSecs)}${totalEarned > 0 ? ` · S/. ${totalEarned.toFixed(2)}` : ""} este mes</div>` : ""}
-        </div>
-      </div>
-      ${isActive
-        ? `<div class="proj-running" style="color:${p.color}">● en curso</div>`
-        : (!active ? `<div class="proj-hint">▶ iniciar</div>` : "")
-      }
-    `;
-    if (!active) {
-      btn.addEventListener("click", () => {
-        document.getElementById("timer-display").style.color = p.color;
-        document.getElementById("timer-project-label").textContent = "◦ " + p.name;
-        document.getElementById("timer-controls").style.display = "flex";
-        startTimer(p.id);
-      });
-    }
-
-    // Botón eliminar — solo visible cuando no hay timer activo
-    if (!active) {
-      const delBtn = document.createElement("button");
-      delBtn.className = "btn-del";
-      delBtn.title = "Eliminar proyecto";
-      delBtn.textContent = "✕";
-      delBtn.style.cssText = `
-        background:transparent;border:1px solid var(--border);
-        border-radius:8px;width:36px;height:36px;
-        color:var(--muted);cursor:pointer;font-size:13px;
-        flex-shrink:0;transition:all 0.15s;
-      `;
-      delBtn.addEventListener("mouseenter", () => {
-        delBtn.style.borderColor = "#f08080";
-        delBtn.style.color = "#f08080";
-        delBtn.style.background = "#2a1a1a";
-      });
-      delBtn.addEventListener("mouseleave", () => {
-        delBtn.style.borderColor = "var(--border)";
-        delBtn.style.color = "var(--muted)";
-        delBtn.style.background = "transparent";
-      });
-      delBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (confirm(`¿Eliminar el proyecto "${p.name}"?\n\nSus sesiones en el historial se conservarán.`)) {
-          projects = projects.filter(pr => pr.id !== p.id);
-          saveProjects();
-          renderTimerPanel();
-          populateManualSelect();
-        }
-      });
-      wrapper.appendChild(btn);
-      wrapper.appendChild(delBtn);
-    } else {
-      wrapper.appendChild(btn);
-    }
-
-    list.appendChild(wrapper);
+  projects.forEach(p=>{
+    const isActive=active?.projectId===p.id;
+    const mSecs=monthSecs(p.id);
+    const mEarned=p.rate>0?(mSecs/3600)*p.rate:0;
+    const row=document.createElement("div"); row.className="proj-row";
+    const btn=document.createElement("button"); btn.className="proj-item";
+    if (active&&!isActive) btn.setAttribute("disabled","");
+    btn.style.borderColor=isActive?p.color:"";
+    btn.style.background =isActive?p.color+"18":"";
+    btn.innerHTML=
+      '<div class="proj-dot" style="background:'+p.color+'"></div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="proj-name">'+p.name+'</div>'+
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:3px">'+
+          (p.rate>0?'<span class="proj-meta">S/. '+p.rate+'/hr</span>':'')+
+          (mSecs>0?'<span class="proj-month" style="color:'+p.color+';opacity:0.9">'+fmtH(mSecs)+(mEarned>0?' · S/. '+mEarned.toFixed(2):'')+' este mes</span>':'')+
+        '</div>'+
+      '</div>'+
+      (isActive?'<span class="proj-running" style="color:'+p.color+'">● en curso</span>':(!active?'<span class="proj-hint">▶ iniciar</span>':""));
+    if (!active) btn.addEventListener("click",()=>startTimer(p.id));
+    const delBtn=document.createElement("button"); delBtn.className="btn-del-proj"; delBtn.title="Eliminar proyecto"; delBtn.textContent="✕";
+    if (active) delBtn.style.display="none";
+    delBtn.addEventListener("click",e=>{e.stopPropagation();openDelModal(p.id,p.name);});
+    row.appendChild(btn); row.appendChild(delBtn); list.appendChild(row);
   });
+  populateQMSelect();
 }
 
-// ─── Manual ───────────────────────────────────────────────────────────────────
-document.getElementById("manual-date").value = todayStr();
-
-function populateManualSelect() {
-  const sel = document.getElementById("manual-project");
-  sel.innerHTML = '<option value="">Selecciona...</option>';
-  projects.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.id; opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
+function populateQMSelect() {
+  const sel=document.getElementById("qm-project");
+  const prev=sel.value;
+  sel.innerHTML='<option value="">Selecciona...</option>';
+  projects.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+  if (prev) sel.value=prev;
 }
 
-document.getElementById("btn-save-manual").addEventListener("click", () => {
-  const projectId = document.getElementById("manual-project").value;
-  const date      = document.getElementById("manual-date").value;
-  const h         = parseInt(document.getElementById("manual-hours").value) || 0;
-  const m         = parseInt(document.getElementById("manual-mins").value) || 0;
-  const note      = document.getElementById("manual-note").value.trim();
-  const duration  = h * 3600 + m * 60;
-  if (!projectId || duration === 0) return;
-  sessions.unshift({
-    id: Date.now().toString(),
-    projectId, date, duration, note, type: "manual",
-  });
+// ── Quick manual ──────────────────────────────────────────────────────────────
+document.getElementById("btn-toggle-manual").addEventListener("click",()=>{
+  quickOpen=!quickOpen;
+  const el=document.getElementById("quick-manual");
+  const btn=document.getElementById("btn-toggle-manual");
+  el.style.display=quickOpen?"block":"none";
+  btn.textContent=quickOpen?"− cerrar":"+ registrar manualmente";
+  btn.style.color=quickOpen?"var(--accent)":"var(--muted)";
+  if (quickOpen) document.getElementById("qm-date").value=todayStr();
+});
+
+document.getElementById("btn-qm-save").addEventListener("click",()=>{
+  const projectId=document.getElementById("qm-project").value;
+  const date=document.getElementById("qm-date").value;
+  const h=parseInt(document.getElementById("qm-hours").value)||0;
+  const m=parseInt(document.getElementById("qm-mins").value)||0;
+  const note=document.getElementById("qm-note").value.trim();
+  const duration=h*3600+m*60;
+  if (!projectId||duration===0) return;
+  sessions.unshift({id:Date.now().toString(),projectId,date,duration,note,type:"manual"});
   saveSessions();
-  document.getElementById("manual-hours").value = "";
-  document.getElementById("manual-mins").value  = "";
-  document.getElementById("manual-note").value  = "";
-  // Flash feedback
-  const btn = document.getElementById("btn-save-manual");
-  const orig = btn.textContent;
-  btn.textContent = "✓ Guardado";
-  setTimeout(() => { btn.textContent = orig; }, 1500);
+  document.getElementById("qm-hours").value="";
+  document.getElementById("qm-mins").value="";
+  document.getElementById("qm-note").value="";
+  const b=document.getElementById("btn-qm-save"); const orig=b.textContent;
+  b.textContent="✓ Guardado"; b.style.background="#a6e3a1"; b.style.color="#0d0d1a";
+  setTimeout(()=>{b.textContent=orig;b.style.background="";b.style.color="";},1800);
   renderTimerPanel();
 });
 
-// ─── New project modal ────────────────────────────────────────────────────────
-document.getElementById("btn-new-proj").addEventListener("click", () => {
-  document.getElementById("modal-overlay").classList.add("open");
+// ── Modal: nuevo proyecto ─────────────────────────────────────────────────────
+document.getElementById("btn-new-proj").addEventListener("click",()=>{
+  document.getElementById("modal-new").classList.add("open");
+  setTimeout(()=>document.getElementById("new-proj-name").focus(),60);
 });
-
-document.getElementById("btn-modal-cancel").addEventListener("click", () => {
-  document.getElementById("modal-overlay").classList.remove("open");
+document.getElementById("new-proj-color").addEventListener("input",e=>{
+  document.getElementById("color-preview").style.background=e.target.value;
+  document.getElementById("color-hex").textContent=e.target.value;
 });
-
-document.getElementById("new-proj-color").addEventListener("input", e => {
-  document.getElementById("color-preview").style.background = e.target.value;
+document.getElementById("btn-modal-cancel").addEventListener("click",closeNewModal);
+document.getElementById("btn-modal-save").addEventListener("click",()=>{
+  const name=document.getElementById("new-proj-name").value.trim();
+  const color=document.getElementById("new-proj-color").value;
+  const rate=parseFloat(document.getElementById("new-proj-rate").value)||0;
+  if (!name){document.getElementById("new-proj-name").focus();return;}
+  projects.push({id:Date.now().toString(),name,color,rate});
+  saveProjects(); closeNewModal(); renderTimerPanel();
 });
+document.getElementById("modal-new").addEventListener("click",e=>{if(e.target===document.getElementById("modal-new"))closeNewModal();});
+function closeNewModal() {
+  document.getElementById("new-proj-name").value="";
+  document.getElementById("new-proj-rate").value="";
+  document.getElementById("new-proj-color").value="#c792ea";
+  document.getElementById("color-preview").style.background="#c792ea";
+  document.getElementById("color-hex").textContent="#c792ea";
+  document.getElementById("modal-new").classList.remove("open");
+}
 
-document.getElementById("btn-modal-save").addEventListener("click", () => {
-  const name  = document.getElementById("new-proj-name").value.trim();
-  const color = document.getElementById("new-proj-color").value;
-  const rate  = parseFloat(document.getElementById("new-proj-rate").value) || 0;
-  if (!name) return;
-  projects.push({ id: Date.now().toString(), name, color, rate });
-  saveProjects();
-  document.getElementById("new-proj-name").value = "";
-  document.getElementById("new-proj-rate").value = "";
-  document.getElementById("modal-overlay").classList.remove("open");
+// ── Modal: eliminar proyecto ──────────────────────────────────────────────────
+function openDelModal(id,name) {
+  pendingDel=id;
+  const count=sessions.filter(s=>s.projectId===id).length;
+  document.getElementById("del-modal-text").innerHTML=
+    "¿Eliminar <strong style='color:var(--text)'>\""+name+"\"</strong>?<br><br>"+
+    (count>0
+      ?"Tiene <strong style='color:var(--text)'>"+count+" sesión"+(count>1?"es":"")+"</strong> registrada"+(count>1?"s":"")+".<br><span style='font-size:12px'>Las sesiones se conservarán en el historial.</span>"
+      :"No tiene sesiones. Se eliminará permanentemente.");
+  document.getElementById("modal-del").classList.add("open");
+}
+document.getElementById("btn-del-cancel").addEventListener("click",()=>{document.getElementById("modal-del").classList.remove("open");pendingDel=null;});
+document.getElementById("btn-del-confirm").addEventListener("click",()=>{
+  if (!pendingDel) return;
+  projects=projects.filter(p=>p.id!==pendingDel);
+  saveProjects(); pendingDel=null;
+  document.getElementById("modal-del").classList.remove("open");
   renderTimerPanel();
-  populateManualSelect();
+});
+document.getElementById("modal-del").addEventListener("click",e=>{
+  if(e.target===document.getElementById("modal-del")){document.getElementById("modal-del").classList.remove("open");pendingDel=null;}
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){closeNewModal();document.getElementById("modal-del").classList.remove("open");}
 });
 
-// Close modal on overlay click
-document.getElementById("modal-overlay").addEventListener("click", e => {
-  if (e.target === document.getElementById("modal-overlay")) {
-    document.getElementById("modal-overlay").classList.remove("open");
-  }
+// ── Dashboard: navegación de meses ───────────────────────────────────────────
+document.getElementById("dash-prev").addEventListener("click",()=>{
+  const months=availableMonths(), idx=months.indexOf(dashMonth);
+  if (idx>0){dashMonth=months[idx-1];renderDashboard();}
+});
+document.getElementById("dash-next").addEventListener("click",()=>{
+  const months=availableMonths(), idx=months.indexOf(dashMonth);
+  if (idx<months.length-1){dashMonth=months[idx+1];renderDashboard();}
 });
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
 function renderDashboard() {
-  const month = currentMonth();
-  const ms = sessions.filter(s => monthOf(s.date) === month);
-  const totalSecs = ms.reduce((a, s) => a + s.duration, 0);
+  const months=availableMonths();
+  if (!months.includes(dashMonth)) dashMonth=currentMonth();
+  const idx=months.indexOf(dashMonth);
+  const isCurrent=dashMonth===currentMonth();
 
-  const statsByProj = projects.map(p => {
-    const ps = ms.filter(s => s.projectId === p.id);
-    const secs = ps.reduce((a, s) => a + s.duration, 0);
-    return { ...p, secs, hours: secs / 3600, earnings: (secs / 3600) * p.rate };
+  // Nav state
+  document.getElementById("dash-month-label").textContent=fmtMonthLabel(dashMonth);
+  document.getElementById("dash-month-sub").textContent  =isCurrent?"MES ACTUAL":"";
+  const prevBtn=document.getElementById("dash-prev");
+  const nextBtn=document.getElementById("dash-next");
+  prevBtn.disabled=idx===0;
+  nextBtn.disabled=idx===months.length-1;
+
+  // Stats del mes
+  const ms       = sessions.filter(s=>monthOf(s.date)===dashMonth);
+  const totalSec = ms.reduce((a,s)=>a+s.duration,0);
+  const byProj   = projects.map(p=>{
+    const secs=ms.filter(s=>s.projectId===p.id).reduce((a,s)=>a+s.duration,0);
+    return {...p,secs,earnings:(secs/3600)*p.rate};
   });
+  const totalEarn=byProj.reduce((a,p)=>a+p.earnings,0);
 
-  const totalEarnings = statsByProj.reduce((a, p) => a + p.earnings, 0);
+  document.getElementById("dash-hours").textContent    = totalSec>0?fmtH(totalSec):"—";
+  document.getElementById("dash-earnings").textContent = totalEarn>0?"S/. "+totalEarn.toFixed(0):"—";
 
-  document.getElementById("dash-hours").textContent = fmtH(totalSecs);
-  document.getElementById("dash-earnings").textContent =
-    totalEarnings > 0 ? `S/. ${totalEarnings.toFixed(0)}` : "—";
+  const container=document.getElementById("dash-projects");
+  container.innerHTML="";
 
-  const container = document.getElementById("dash-projects");
-  container.innerHTML = "";
+  if (projects.length===0) {
+    container.innerHTML='<div class="dash-empty"><div style="font-size:28px;margin-bottom:10px">◷</div>Crea proyectos en el Timer para ver estadísticas aquí.</div>';
+    renderHistoric(); return;
+  }
+  if (byProj.every(p=>p.secs===0)) {
+    container.innerHTML='<div class="dash-empty"><div style="font-size:28px;margin-bottom:10px">◷</div>Sin sesiones en '+fmtMonthLabel(dashMonth)+'.<div class="dash-tip">💡 Configura tarifas S/./hr en cada proyecto para ver ingresos estimados.</div></div>';
+    renderHistoric(); return;
+  }
 
-  statsByProj.forEach(p => {
-    const pct = totalSecs > 0 ? (p.secs / totalSecs * 100) : 0;
-    const div = document.createElement("div");
-    div.className = "proj-stat";
-    div.innerHTML = `
-      <div class="proj-stat-top">
-        <div class="proj-stat-name">
-          <div class="proj-dot" style="background:${p.color}"></div>
-          ${p.name}
-        </div>
-        <div>
-          <div class="proj-stat-hours" style="color:${p.color};text-align:right">${fmtH(p.secs)}</div>
-          ${p.earnings > 0 ? `<div class="proj-stat-earn">S/. ${p.earnings.toFixed(0)}</div>` : ""}
-        </div>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${pct}%;background:${p.color}"></div>
-      </div>
-      <div class="rate-row">
-        <span class="rate-label">Tarifa:</span>
-        <button class="btn-rate" data-id="${p.id}">
-          ${p.rate > 0 ? `S/. ${p.rate}/hr` : "+ Agregar tarifa"}
-        </button>
-        <div class="rate-edit" id="rate-edit-${p.id}">
-          <input type="number" id="rate-input-${p.id}" placeholder="S/./hr" value="${p.rate || ""}">
-          <button class="btn-ok" data-id="${p.id}">OK</button>
-          <button class="btn-cancel" data-id="${p.id}">✕</button>
-        </div>
-      </div>
-    `;
+  byProj.filter(p=>p.secs>0).forEach(p=>{
+    const pct=totalSec>0?(p.secs/totalSec*100):0;
+    const div=document.createElement("div"); div.className="proj-stat";
+    div.innerHTML=
+      '<div class="proj-stat-top">'+
+        '<div class="proj-stat-name"><div class="proj-dot" style="background:'+p.color+'"></div>'+p.name+'</div>'+
+        '<div class="proj-stat-right">'+
+          '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.secs)+'</div>'+
+          (p.earnings>0?'<div class="proj-stat-earn">S/. '+p.earnings.toFixed(2)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+      '<div class="rate-row">'+
+        '<span class="rate-label">Tarifa:</span>'+
+        '<button class="btn-rate" data-id="'+p.id+'">'+(p.rate>0?"S/. "+p.rate+"/hr · editar":"+ Agregar tarifa")+'</button>'+
+        '<div class="rate-edit" id="rate-edit-'+p.id+'">'+
+          '<input type="number" id="rate-input-'+p.id+'" placeholder="S/./hr" value="'+(p.rate||"")+'">'+
+          '<button class="btn-ok" data-id="'+p.id+'">OK</button>'+
+          '<button class="btn-cancel" data-id="'+p.id+'">✕</button>'+
+        '</div>'+
+      '</div>';
     container.appendChild(div);
   });
 
-  // Rate edit events
-  container.querySelectorAll(".btn-rate").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      btn.style.display = "none";
-      document.getElementById(`rate-edit-${id}`).style.display = "flex";
-      document.getElementById(`rate-input-${id}`).focus();
+  container.querySelectorAll(".btn-rate").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      btn.style.display="none";
+      document.getElementById("rate-edit-"+btn.dataset.id).style.display="flex";
+      document.getElementById("rate-input-"+btn.dataset.id).focus();
     });
   });
-
-  container.querySelectorAll(".btn-ok").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      const val = parseFloat(document.getElementById(`rate-input-${id}`).value) || 0;
-      const proj = projects.find(p => p.id === id);
-      if (proj) { proj.rate = val; saveProjects(); }
-      renderDashboard();
+  container.querySelectorAll(".btn-ok").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const val=parseFloat(document.getElementById("rate-input-"+btn.dataset.id).value)||0;
+      const proj=projects.find(p=>p.id===btn.dataset.id);
+      if (proj){proj.rate=val;saveProjects();}
+      renderDashboard(); renderTimerPanel();
     });
   });
+  container.querySelectorAll(".btn-cancel").forEach(btn=>{
+    btn.addEventListener("click",()=>renderDashboard());
+  });
 
-  container.querySelectorAll(".btn-cancel").forEach(btn => {
-    btn.addEventListener("click", () => renderDashboard());
+  renderHistoric();
+}
+
+// ── Total histórico ───────────────────────────────────────────────────────────
+function renderHistoric() {
+  const section  =document.getElementById("dash-historic-section");
+  const summary  =document.getElementById("dash-historic-summary");
+  const container=document.getElementById("dash-historic");
+  summary.innerHTML=""; container.innerHTML="";
+
+  if (sessions.length===0||projects.length===0){section.style.display="none";return;}
+
+  const historicByProj=projects.map(p=>{
+    const allSecs    =sessions.filter(s=>s.projectId===p.id).reduce((a,s)=>a+s.duration,0);
+    const allEarnings=(allSecs/3600)*p.rate;
+    const projMonths =[...new Set(sessions.filter(s=>s.projectId===p.id).map(s=>monthOf(s.date)).filter(Boolean))].sort();
+    return {...p,allSecs,allEarnings,projMonths};
+  }).filter(p=>p.allSecs>0);
+
+  if (historicByProj.length===0){section.style.display="none";return;}
+  section.style.display="block";
+
+  const totalSecs =historicByProj.reduce((a,p)=>a+p.allSecs,0);
+  const totalEarn =historicByProj.reduce((a,p)=>a+p.allEarnings,0);
+
+  // Totales globales
+  summary.innerHTML=
+    '<div class="historic-mini">'+
+      '<div class="stat-label">HORAS TOTALES</div>'+
+      '<div style="font-size:26px;font-weight:300;color:var(--accent)">'+fmtH(totalSecs)+'</div>'+
+    '</div>'+
+    '<div class="historic-mini">'+
+      '<div class="stat-label">INGRESOS TOTALES</div>'+
+      '<div style="font-size:26px;font-weight:300;color:var(--green)">'+(totalEarn>0?"S/. "+totalEarn.toFixed(0):"—")+'</div>'+
+    '</div>';
+
+  // Por proyecto
+  historicByProj.forEach(p=>{
+    const pct=totalSecs>0?(p.allSecs/totalSecs*100):0;
+    const first=p.projMonths[0];
+    const last =p.projMonths[p.projMonths.length-1];
+    const range=p.projMonths.length>1
+      ?fmtMonthLabel(first)+" – "+fmtMonthLabel(last)+" ("+p.projMonths.length+" meses)"
+      :(p.projMonths.length===1?fmtMonthLabel(first):"");
+
+    const div=document.createElement("div"); div.className="proj-stat";
+    div.innerHTML=
+      '<div class="proj-stat-top">'+
+        '<div class="proj-stat-name"><div class="proj-dot" style="background:'+p.color+'"></div>'+p.name+'</div>'+
+        '<div class="proj-stat-right">'+
+          '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.allSecs)+'</div>'+
+          (p.allEarnings>0?'<div class="proj-stat-earn">S/. '+p.allEarnings.toFixed(2)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+      (range?'<div class="proj-period">📅 '+range+'</div>':"");
+    container.appendChild(div);
   });
 }
 
-// ─── Historial ────────────────────────────────────────────────────────────────
+// ── Historial ─────────────────────────────────────────────────────────────────
 function renderHistorial() {
-  // Filters
-  const bar = document.getElementById("filter-bar");
-  bar.innerHTML = "";
-  [{ id: "all", name: "Todos", color: null }, ...projects].forEach(p => {
-    const btn = document.createElement("button");
-    btn.className = "filter-btn" + (histFilter === p.id ? " active" : "");
-    btn.textContent = p.name;
-    btn.style.borderColor = histFilter === p.id ? (p.color || "var(--accent)") : "";
-    btn.style.color = histFilter === p.id ? (p.color || "var(--accent)") : "";
-    btn.style.background = histFilter === p.id && p.color ? p.color + "18" : "";
-    btn.addEventListener("click", () => { histFilter = p.id; renderHistorial(); });
+  const bar=document.getElementById("filter-bar");
+  bar.innerHTML="";
+  [{id:"all",name:"Todos",color:null},...projects].forEach(p=>{
+    const btn=document.createElement("button"); btn.className="filter-btn"; btn.textContent=p.name;
+    if (histFilter===p.id){btn.style.borderColor=p.color||"var(--accent)";btn.style.color=p.color||"var(--accent)";btn.style.background=p.color?p.color+"18":"#c792ea18";}
+    btn.addEventListener("click",()=>{histFilter=p.id;renderHistorial();});
     bar.appendChild(btn);
   });
-
-  // Sessions
-  const list = document.getElementById("sessions-list");
-  list.innerHTML = "";
-  const filtered = histFilter === "all" ? sessions : sessions.filter(s => s.projectId === histFilter);
-
-  if (filtered.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">◷</div>
-        <div class="empty-text">Sin sesiones registradas</div>
-        <div class="empty-sub">Inicia un timer o registra manualmente</div>
-      </div>`;
+  const list=document.getElementById("sessions-list");
+  list.innerHTML="";
+  const filtered=histFilter==="all"?sessions:sessions.filter(s=>s.projectId===histFilter);
+  if (filtered.length===0){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">◷</div><div class="empty-text">Sin sesiones registradas</div><div class="empty-sub">Inicia un timer o registra manualmente</div></div>';
     return;
   }
-
-  filtered.forEach(s => {
-    const proj = getProject(s.projectId);
-    const earnings = proj?.rate ? (s.duration / 3600) * proj.rate : 0;
-    const div = document.createElement("div");
-    div.className = "session-item";
-    div.innerHTML = `
-      <div class="session-dot" style="background:${proj?.color || "var(--muted)"}"></div>
-      <div class="session-body">
-        <div class="session-top">
-          <span class="session-name">${proj?.name || "—"}</span>
-          <span class="session-hours" style="color:${proj?.color || "var(--accent)"}">${fmtH(s.duration)}</span>
-        </div>
-        <div class="session-meta">
-          <span>${s.date} · ${s.type === "manual" ? "manual" : "timer"}${s.note ? " · " + s.note : ""}</span>
-          ${earnings > 0 ? `<span class="session-earn">S/. ${earnings.toFixed(0)}</span>` : ""}
-        </div>
-      </div>
-      <button class="btn-del" data-id="${s.id}">✕</button>
-    `;
+  filtered.forEach(s=>{
+    const proj=getProject(s.projectId);
+    const earning=proj?.rate?(s.duration/3600)*proj.rate:0;
+    const div=document.createElement("div"); div.className="session-item";
+    div.innerHTML=
+      '<div class="session-dot" style="background:'+(proj?.color||"var(--muted)")+'"></div>'+
+      '<div class="session-body">'+
+        '<div class="session-top">'+
+          '<span class="session-name">'+(proj?.name||"Proyecto eliminado")+'</span>'+
+          '<span class="session-hours" style="color:'+(proj?.color||"var(--muted)")+'">'+fmtH(s.duration)+'</span>'+
+        '</div>'+
+        '<div class="session-meta">'+
+          '<span class="session-note">'+s.date+' · '+(s.type==="manual"?"manual":"timer")+(s.note?" · "+s.note:"")+'</span>'+
+          (earning>0?'<span class="session-earn">S/. '+earning.toFixed(2)+'</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<button class="btn-del" data-id="'+s.id+'">✕</button>';
     list.appendChild(div);
   });
-
-  list.querySelectorAll(".btn-del").forEach(btn => {
-    btn.addEventListener("click", () => {
-      sessions = sessions.filter(s => s.id !== btn.dataset.id);
-      saveSessions();
-      renderHistorial();
+  list.querySelectorAll(".btn-del").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      sessions=sessions.filter(s=>s.id!==btn.dataset.id);
+      saveSessions(); renderHistorial(); renderTimerPanel();
     });
   });
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 renderTimerPanel();
-populateManualSelect();
 </script>
 </body>
 </html>
