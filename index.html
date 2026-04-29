@@ -390,6 +390,8 @@
     <div class="card" style="margin-bottom:20px">
       <div id="timer-display">00:00:00</div>
       <div id="timer-project-label">Selecciona un proyecto para iniciar</div>
+      <div id="timer-earning" style="display:none;text-align:center;font-size:22px;font-weight:300;color:var(--green);margin-bottom:6px;transition:all 0.3s"></div>
+      <div id="timer-saved" style="display:none;text-align:center;font-size:12px;color:var(--green);margin-bottom:12px;animation:fadeIn 0.3s ease"></div>
       <div id="timer-controls">
         <button class="btn btn-pause" id="btn-pause">⏸ Pausar</button>
         <button class="btn btn-stop"  id="btn-stop">⏹ Detener</button>
@@ -559,6 +561,19 @@ function startTick() {
       elapsed++;
       document.getElementById("timer-display").textContent = fmt(elapsed);
       document.getElementById("active-elapsed").textContent = fmt(elapsed);
+
+      // Monto en tiempo real
+      if (active) {
+        const proj = getProject(active.projectId);
+        const earningEl = document.getElementById("timer-earning");
+        if (proj?.rate > 0) {
+          const earned = (elapsed / 3600) * proj.rate;
+          earningEl.style.display = "block";
+          earningEl.textContent = `S/. ${earned.toFixed(2)}`;
+        } else {
+          earningEl.style.display = "none";
+        }
+      }
     }
   }, 1000);
 }
@@ -571,6 +586,7 @@ document.getElementById("btn-pause").addEventListener("click", () => {
 document.getElementById("btn-stop").addEventListener("click", () => {
   if (!active || elapsed < 5) { resetTimer(); return; }
   clearInterval(interval);
+  const proj = getProject(active.projectId);
   const session = {
     id: Date.now().toString(),
     projectId: active.projectId,
@@ -581,7 +597,28 @@ document.getElementById("btn-stop").addEventListener("click", () => {
   };
   sessions.unshift(session);
   saveSessions();
-  resetTimer();
+
+  // Mensaje de confirmación
+  const mins = Math.floor(elapsed / 60);
+  const hrs  = Math.floor(mins / 60);
+  const rem  = mins % 60;
+  const timeStr = hrs > 0 ? `${hrs}h ${rem}min` : `${mins}min`;
+  const earned = proj?.rate > 0 ? ` · S/. ${((elapsed / 3600) * proj.rate).toFixed(2)}` : "";
+  const savedEl = document.getElementById("timer-saved");
+  savedEl.textContent = `✓ Guardado — ${timeStr} en ${proj?.name || "—"}${earned}`;
+  savedEl.style.display = "block";
+  document.getElementById("timer-earning").style.display = "none";
+  document.getElementById("timer-controls").style.display = "none";
+  document.getElementById("timer-display").textContent = "00:00:00";
+  document.getElementById("timer-display").style.color = "var(--muted)";
+  document.getElementById("timer-project-label").textContent = "Selecciona un proyecto para iniciar";
+  document.getElementById("active-badge").style.display = "none";
+  active = null; elapsed = 0; running = false;
+
+  setTimeout(() => {
+    savedEl.style.display = "none";
+    renderTimerPanel();
+  }, 3000);
 });
 
 function resetTimer() {
@@ -636,6 +673,14 @@ function renderTimerPanel() {
 
   projects.forEach(p => {
     const isActive = active?.projectId === p.id;
+
+    // Total acumulado este mes
+    const month = currentMonth();
+    const projSessions = sessions.filter(s => s.projectId === p.id && monthOf(s.date) === month);
+    const totalSecs = projSessions.reduce((a, s) => a + s.duration, 0);
+    const totalEarned = p.rate > 0 ? (totalSecs / 3600) * p.rate : 0;
+    const hasData = totalSecs > 0;
+
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "display:flex;align-items:center;gap:8px;";
 
@@ -648,7 +693,10 @@ function renderTimerPanel() {
       <div class="proj-dot" style="background:${p.color}"></div>
       <div style="flex:1">
         <div class="proj-name">${p.name}</div>
-        ${p.rate > 0 ? `<div class="proj-rate">S/. ${p.rate}/hr</div>` : ""}
+        <div style="display:flex;gap:10px;align-items:center;margin-top:2px">
+          ${p.rate > 0 ? `<div class="proj-rate">S/. ${p.rate}/hr</div>` : ""}
+          ${hasData ? `<div style="font-size:11px;color:${p.color};opacity:0.8">${fmtH(totalSecs)}${totalEarned > 0 ? ` · S/. ${totalEarned.toFixed(2)}` : ""} este mes</div>` : ""}
+        </div>
       </div>
       ${isActive
         ? `<div class="proj-running" style="color:${p.color}">● en curso</div>`
@@ -738,7 +786,8 @@ document.getElementById("btn-save-manual").addEventListener("click", () => {
   const btn = document.getElementById("btn-save-manual");
   const orig = btn.textContent;
   btn.textContent = "✓ Guardado";
-  setTimeout(() => btn.textContent = orig, 1500);
+  setTimeout(() => { btn.textContent = orig; }, 1500);
+  renderTimerPanel();
 });
 
 // ─── New project modal ────────────────────────────────────────────────────────
