@@ -685,7 +685,7 @@ let tareasProj       = null;
 let editingTareaId   = null;
 let pendingDelTarea  = null;
 let selectedPrio     = "urgente";
-const celebratedSet  = new Set();
+const celebratedSet  = new Set(LS.get("kron_celebrated") || []);
 // Reminder
 let reminderCfg      = LS.get("kron_reminder") || { enabled:false, hours:2, start:9, end:19, days:[1,2,3,4,5] };
 let reminderInterval = null;
@@ -1653,11 +1653,13 @@ function renderTareas() {
   if (pct === 100 && total > 0) {
     if (!celebratedSet.has(tareasProj)) {
       celebratedSet.add(tareasProj);
+      LS.set("kron_celebrated", [...celebratedSet]);
       showCelebration(tareasProj);
     }
   } else {
     // Si ya no está al 100% (desmarcaron una tarea), permitir celebrar de nuevo
     celebratedSet.delete(tareasProj);
+    LS.set("kron_celebrated", [...celebratedSet]);
   }
 }
 
@@ -2361,6 +2363,5 @@ function generatePDF(ms) {
 </script>
 </body>
 </html>
-
 
 
