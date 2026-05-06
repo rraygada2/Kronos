@@ -155,6 +155,32 @@
 
   input[type="color"] { width:40px; height:40px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px; }
 
+  /* TAREAS */
+  #panel-tareas { max-width:600px; }
+  .tarea-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--card); margin-bottom:7px; transition:opacity 0.2s,background 0.15s; }
+  .tarea-item:hover { background:#16162e; }
+  .tarea-item.done { opacity:0.45; }
+  .tarea-item.done .tarea-texto { text-decoration:line-through; color:var(--muted); }
+  .tarea-check { width:20px; height:20px; border-radius:5px; border:1.5px solid var(--border); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; }
+  .tarea-check:hover { border-color:var(--accent); }
+  .tarea-check.checked { background:var(--accent); border-color:var(--accent); }
+  .tarea-check.checked::after { content:''; width:5px; height:9px; border:2px solid #0d0d1a; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); display:block; }
+  .tarea-body { flex:1; min-width:0; }
+  .tarea-texto { font-size:14px; color:var(--text); line-height:1.4; }
+  .tarea-sub-text { font-size:11px; color:var(--muted); margin-top:3px; }
+  .tarea-actions { display:flex; gap:4px; flex-shrink:0; opacity:0; transition:opacity 0.15s; }
+  .tarea-item:hover .tarea-actions { opacity:1; }
+  .btn-tarea-action { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:4px 6px; transition:color 0.15s; }
+  .btn-tarea-action:hover { color:var(--text); }
+  .btn-tarea-action.del:hover { color:#f08080; }
+  .badge-tarea { font-size:10px; font-weight:500; padding:2px 9px; border-radius:99px; flex-shrink:0; letter-spacing:0.5px; }
+  .badge-urgente { background:#f0808020; color:#f08080; border:1px solid #f0808040; }
+  .badge-pendiente { background:#7ab3f020; color:#7ab3f0; border:1px solid #7ab3f040; }
+  .badge-despues { background:#5a5a8a20; color:var(--muted); border:1px solid #5a5a8a40; }
+  .tarea-prio-btn.active[data-prio="urgente"] { background:#f0808020; border-color:#f08080; color:#f08080; }
+  .tarea-prio-btn.active[data-prio="pendiente"] { background:#7ab3f020; border-color:#7ab3f0; color:#7ab3f0; }
+  .tarea-prio-btn.active[data-prio="despues"] { background:#5a5a8a30; border-color:#5a5a8a; color:var(--muted); }
+
   /* Imagen upload */
   .img-upload-label { background:#1a1a30; border:1px dashed var(--border); border-radius:8px; padding:9px 16px; cursor:pointer; font-size:12px; color:var(--muted); transition:all 0.15s; flex-shrink:0; display:inline-block; }
   .img-upload-label:hover { border-color:var(--accent); color:var(--accent); }
@@ -188,6 +214,7 @@
   <button class="tab active" data-tab="timer">TIMER</button>
   <button class="tab" data-tab="dashboard">DASHBOARD</button>
   <button class="tab" data-tab="historial">HISTORIAL</button>
+  <button class="tab" data-tab="tareas">TAREAS</button>
 </div>
 
 <div id="content">
@@ -283,6 +310,99 @@
     <div id="sessions-list"></div>
   </div>
 
+  <!-- TAREAS -->
+  <div id="panel-tareas" class="panel">
+    <!-- Selector de proyecto -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <select id="tareas-proj-select" style="flex:1"></select>
+      <button class="btn btn-primary" id="btn-nueva-tarea" style="white-space:nowrap;padding:11px 18px">+ Tarea</button>
+    </div>
+    <!-- Progress block -->
+    <div id="tareas-progress-block" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--muted);letter-spacing:1.5px">PROGRESO</span>
+        <span id="tareas-pct" style="font-size:22px;font-weight:300;color:var(--accent)">0%</span>
+      </div>
+      <div style="height:4px;background:#1e1e3a;border-radius:2px;overflow:hidden;margin-bottom:12px">
+        <div id="tareas-bar" style="height:100%;border-radius:2px;background:var(--accent);transition:width 0.5s ease;width:0%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+          <div id="t-stat-total" style="font-size:18px;font-weight:300">0</div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">TOTAL</div>
+        </div>
+        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+          <div id="t-stat-done" style="font-size:18px;font-weight:300;color:var(--accent)">0</div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">LISTAS</div>
+        </div>
+        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+          <div id="t-stat-left" style="font-size:18px;font-weight:300">0</div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">PENDIENTES</div>
+        </div>
+      </div>
+    </div>
+    <!-- Secciones por prioridad -->
+    <div id="tareas-urgente-section" style="display:none;margin-bottom:20px">
+      <div class="section-label" style="color:#f08080">URGENTE</div>
+      <div id="tareas-urgente-list"></div>
+    </div>
+    <div id="tareas-pendiente-section" style="display:none;margin-bottom:20px">
+      <div class="section-label">PENDIENTE</div>
+      <div id="tareas-pendiente-list"></div>
+    </div>
+    <div id="tareas-despues-section" style="display:none;margin-bottom:20px">
+      <div class="section-label" style="color:var(--muted)">DESPUÉS</div>
+      <div id="tareas-despues-list"></div>
+    </div>
+    <!-- Empty state -->
+    <div id="tareas-empty" style="text-align:center;color:var(--muted);padding:48px 0">
+      <div style="font-size:32px;margin-bottom:12px">✓</div>
+      <div style="font-size:14px;margin-bottom:4px">Sin tareas</div>
+      <div style="font-size:12px">Selecciona un proyecto y agrega tu primera tarea</div>
+    </div>
+    <!-- Empty projects state -->
+    <div id="tareas-no-proj" style="display:none;text-align:center;color:var(--muted);padding:48px 0">
+      <div style="font-size:32px;margin-bottom:12px">◷</div>
+      <div style="font-size:14px;margin-bottom:4px">No hay proyectos</div>
+      <div style="font-size:12px">Crea un proyecto en el Timer primero</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Nueva / Editar tarea -->
+<div id="modal-tarea" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-tarea-title">Nueva tarea</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label>TAREA</label><input type="text" id="tarea-texto" placeholder="Descripción de la tarea..."></div>
+      <div class="field"><label>DETALLE <span style="color:var(--muted);font-weight:300">(opcional)</span></label><input type="text" id="tarea-sub" placeholder="Contexto adicional..."></div>
+      <div class="field">
+        <label>PRIORIDAD</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="tarea-prio-btn active" data-prio="urgente" style="flex:1;padding:9px;border-radius:8px;background:#f0808020;border:1px solid #f0808066;color:#f08080;font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s">urgente</button>
+          <button class="tarea-prio-btn" data-prio="pendiente" style="flex:1;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s">pendiente</button>
+          <button class="tarea-prio-btn" data-prio="despues" style="flex:1;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s">después</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn btn-ghost" id="btn-tarea-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-tarea-save">Crear tarea</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Eliminar tarea -->
+<div id="modal-del-tarea" class="modal-overlay">
+  <div class="modal-box" style="border-color:#f0808033">
+    <div class="modal-title" style="color:#f08080">Eliminar tarea</div>
+    <p id="del-tarea-text" style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:24px"></p>
+    <div class="row">
+      <button class="btn btn-ghost" id="btn-del-tarea-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="btn-del-tarea-confirm">Eliminar</button>
+    </div>
+  </div>
 </div>
 
 <!-- Modal: Nuevo / Editar proyecto -->
@@ -435,6 +555,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
     document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab==="dashboard") renderDashboard();
     if (btn.dataset.tab==="historial") renderHistorial();
+    if (btn.dataset.tab==="tareas") renderTareas();
   });
 });
 
@@ -824,8 +945,10 @@ document.getElementById("modal-del-session").addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{
   if (e.key==="Escape"){
     closeProjModal();
+    closeTareaModal();
     document.getElementById("modal-del-proj").classList.remove("open");
     document.getElementById("modal-del-session").classList.remove("open");
+    document.getElementById("modal-del-tarea").classList.remove("open");
     document.getElementById("lightbox").style.display="none";
   }
 });
@@ -998,6 +1121,224 @@ function renderHistorial() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderTimerPanel();
+
+// ── TAREAS ────────────────────────────────────────────────────────────────────
+let tasks            = LS.get("kron_tasks") || [];
+let tareasProj       = null;   // projectId seleccionado en TAREAS
+let editingTareaId   = null;   // null = nueva, string = editando
+let pendingDelTarea  = null;
+let selectedPrio     = "urgente";
+
+function saveTasks() { LS.set("kron_tasks", tasks); }
+
+function populateTareasSelect() {
+  const sel = document.getElementById("tareas-proj-select");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  if (projects.length === 0) {
+    sel.innerHTML = '<option value="">Sin proyectos</option>';
+    tareasProj = null;
+    return;
+  }
+  projects.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id; o.textContent = p.name; sel.appendChild(o);
+  });
+  if (prev && projects.find(p => p.id === prev)) sel.value = prev;
+  tareasProj = sel.value;
+}
+
+function renderTareas() {
+  populateTareasSelect();
+  if (projects.length === 0) {
+    document.getElementById("tareas-no-proj").style.display = "block";
+    document.getElementById("tareas-empty").style.display = "none";
+    document.getElementById("tareas-progress-block").style.display = "none";
+    document.getElementById("tareas-urgente-section").style.display = "none";
+    document.getElementById("tareas-pendiente-section").style.display = "none";
+    document.getElementById("tareas-despues-section").style.display = "none";
+    document.getElementById("btn-nueva-tarea").style.display = "none";
+    return;
+  }
+  document.getElementById("tareas-no-proj").style.display = "none";
+  document.getElementById("btn-nueva-tarea").style.display = "";
+  tareasProj = document.getElementById("tareas-proj-select").value;
+  const projTasks = tasks.filter(t => t.projectId === tareasProj);
+  const urgente   = projTasks.filter(t => t.prio === "urgente");
+  const pendiente = projTasks.filter(t => t.prio === "pendiente");
+  const despues   = projTasks.filter(t => t.prio === "despues");
+  const total = projTasks.length;
+  const done  = projTasks.filter(t => t.done).length;
+  const left  = total - done;
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const proj  = getProject(tareasProj);
+
+  // Progress block
+  if (total > 0) {
+    document.getElementById("tareas-progress-block").style.display = "block";
+    document.getElementById("tareas-bar").style.width = pct + "%";
+    document.getElementById("tareas-bar").style.background = proj?.color || "var(--accent)";
+    document.getElementById("tareas-pct").style.color = proj?.color || "var(--accent)";
+    document.getElementById("tareas-pct").textContent = pct + "%";
+    document.getElementById("t-stat-total").textContent = total;
+    document.getElementById("t-stat-done").textContent = done;
+    document.getElementById("t-stat-done").style.color = proj?.color || "var(--accent)";
+    document.getElementById("t-stat-left").textContent = left;
+    document.getElementById("tareas-empty").style.display = "none";
+  } else {
+    document.getElementById("tareas-progress-block").style.display = "none";
+    document.getElementById("tareas-empty").style.display = "block";
+  }
+
+  // Render each priority section
+  renderTareaSection("urgente",   urgente);
+  renderTareaSection("pendiente", pendiente);
+  renderTareaSection("despues",   despues);
+}
+
+function renderTareaSection(prio, list) {
+  const section = document.getElementById("tareas-" + prio + "-section");
+  const container = document.getElementById("tareas-" + prio + "-list");
+  container.innerHTML = "";
+  if (list.length === 0) { section.style.display = "none"; return; }
+  section.style.display = "block";
+  list.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "tarea-item" + (t.done ? " done" : "");
+    div.innerHTML =
+      '<div class="tarea-check' + (t.done ? " checked" : "") + '" data-id="' + t.id + '"></div>' +
+      '<div class="tarea-body">' +
+        '<div class="tarea-texto">' + escHtml(t.texto) + '</div>' +
+        (t.sub ? '<div class="tarea-sub-text">' + escHtml(t.sub) + '</div>' : '') +
+      '</div>' +
+      '<span class="badge-tarea badge-' + prio + '">' + (prio === "despues" ? "después" : prio) + '</span>' +
+      '<div class="tarea-actions">' +
+        '<button class="btn-tarea-action" data-edit="' + t.id + '" title="Editar">✎</button>' +
+        '<button class="btn-tarea-action del" data-del="' + t.id + '" title="Eliminar">✕</button>' +
+      '</div>';
+    container.appendChild(div);
+  });
+  // Check toggle
+  container.querySelectorAll(".tarea-check").forEach(chk => {
+    chk.addEventListener("click", () => {
+      const t = tasks.find(x => x.id === chk.dataset.id);
+      if (t) { t.done = !t.done; saveTasks(); renderTareas(); }
+    });
+  });
+  // Edit
+  container.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => openTareaModal(tareasProj, btn.dataset.edit));
+  });
+  // Delete
+  container.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", () => openDelTareaModal(btn.dataset.del));
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Selector change
+document.getElementById("tareas-proj-select").addEventListener("change", () => {
+  tareasProj = document.getElementById("tareas-proj-select").value;
+  renderTareas();
+});
+
+// Nueva tarea button
+document.getElementById("btn-nueva-tarea").addEventListener("click", () => {
+  openTareaModal(tareasProj, null);
+});
+
+// ── Modal nueva/editar tarea ──────────────────────────────────────────────────
+function openTareaModal(projectId, tareaId = null) {
+  editingTareaId = tareaId;
+  const isEdit = tareaId !== null;
+  document.getElementById("modal-tarea-title").textContent = isEdit ? "Editar tarea" : "Nueva tarea";
+  document.getElementById("btn-tarea-save").textContent = isEdit ? "Guardar cambios" : "Crear tarea";
+  if (isEdit) {
+    const t = tasks.find(x => x.id === tareaId);
+    document.getElementById("tarea-texto").value = t?.texto || "";
+    document.getElementById("tarea-sub").value = t?.sub || "";
+    selectedPrio = t?.prio || "urgente";
+  } else {
+    document.getElementById("tarea-texto").value = "";
+    document.getElementById("tarea-sub").value = "";
+    selectedPrio = "urgente";
+  }
+  updatePrioBtns();
+  document.getElementById("modal-tarea").classList.add("open");
+  setTimeout(() => document.getElementById("tarea-texto").focus(), 60);
+}
+
+const PRIO_STYLES = {
+  urgente:   { bg:"#f0808020", border:"#f08080", color:"#f08080" },
+  pendiente: { bg:"#7ab3f020", border:"#7ab3f0", color:"#7ab3f0" },
+  despues:   { bg:"#5a5a8a30", border:"#5a5a8a", color:"var(--muted)" },
+};
+
+function updatePrioBtns() {
+  document.querySelectorAll(".tarea-prio-btn").forEach(b => {
+    const isActive = b.dataset.prio === selectedPrio;
+    const s = PRIO_STYLES[b.dataset.prio];
+    b.style.background  = isActive ? s.bg      : "transparent";
+    b.style.borderColor = isActive ? s.border  : "var(--border)";
+    b.style.color       = isActive ? s.color   : "var(--muted)";
+  });
+}
+
+document.querySelectorAll(".tarea-prio-btn").forEach(b => {
+  b.addEventListener("click", () => { selectedPrio = b.dataset.prio; updatePrioBtns(); });
+});
+
+document.getElementById("btn-tarea-cancel").addEventListener("click", closeTareaModal);
+document.getElementById("modal-tarea").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-tarea")) closeTareaModal();
+});
+
+document.getElementById("btn-tarea-save").addEventListener("click", () => {
+  const texto = document.getElementById("tarea-texto").value.trim();
+  const sub   = document.getElementById("tarea-sub").value.trim();
+  if (!texto) { document.getElementById("tarea-texto").focus(); return; }
+  if (editingTareaId) {
+    const t = tasks.find(x => x.id === editingTareaId);
+    if (t) { t.texto = texto; t.sub = sub; t.prio = selectedPrio; }
+  } else {
+    tasks.push({ id: Date.now().toString(), projectId: tareasProj, texto, sub, prio: selectedPrio, done: false });
+  }
+  saveTasks(); closeTareaModal(); renderTareas();
+});
+
+function closeTareaModal() {
+  editingTareaId = null;
+  document.getElementById("modal-tarea").classList.remove("open");
+}
+
+// ── Modal eliminar tarea ──────────────────────────────────────────────────────
+function openDelTareaModal(id) {
+  pendingDelTarea = id;
+  const t = tasks.find(x => x.id === id);
+  document.getElementById("del-tarea-text").innerHTML =
+    "¿Eliminar <strong style='color:var(--text)'>\"" + escHtml(t?.texto || "") + "\"</strong>?<br><br>" +
+    "<span style='font-size:12px'>Esta acción no se puede deshacer.</span>";
+  document.getElementById("modal-del-tarea").classList.add("open");
+}
+document.getElementById("btn-del-tarea-cancel").addEventListener("click", () => {
+  document.getElementById("modal-del-tarea").classList.remove("open"); pendingDelTarea = null;
+});
+document.getElementById("btn-del-tarea-confirm").addEventListener("click", () => {
+  if (!pendingDelTarea) return;
+  tasks = tasks.filter(t => t.id !== pendingDelTarea);
+  saveTasks(); pendingDelTarea = null;
+  document.getElementById("modal-del-tarea").classList.remove("open");
+  renderTareas();
+});
+document.getElementById("modal-del-tarea").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-del-tarea")) {
+    document.getElementById("modal-del-tarea").classList.remove("open"); pendingDelTarea = null;
+  }
+});
 </script>
 </body>
 </html>
+
