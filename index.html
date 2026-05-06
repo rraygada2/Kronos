@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,13 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root { --bg:#0d0d1a; --card:#13132a; --border:#1e1e3a; --text:#e0e0f0; --muted:#5a5a8a; --accent:#c792ea; --green:#a6e3a1; }
+  :root { --bg:#12142a; --card:#1a1d3a; --border:#252850; --text:#f0f0ff; --muted:#8a8ab8; --accent:#c792ea; --green:#a6e3a1; }
   body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100vh; display:flex; flex-direction:column; font-size:14px; }
   input,select,button { font-family:'DM Mono',monospace; }
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-thumb { background:#2a2a4a; border-radius:2px; }
 
-  #header { padding:16px 24px; border-bottom:1px solid var(--border); background:#0a0a16; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  #header { padding:16px 24px; border-bottom:1px solid var(--border); background:#0e1020; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
   #logo { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
   #logo-sub { font-size:11px; color:var(--muted); letter-spacing:2px; margin-top:1px; }
   #active-badge { display:none; align-items:center; gap:8px; }
@@ -22,7 +21,7 @@
   #active-name { font-size:13px; color:var(--muted); }
   #active-elapsed { font-size:15px; font-weight:500; color:var(--accent); }
 
-  #tabs { display:flex; border-bottom:1px solid var(--border); background:#0a0a16; padding:0 24px; flex-shrink:0; }
+  #tabs { display:flex; border-bottom:1px solid var(--border); background:#0e1020; padding:0 24px; flex-shrink:0; }
   .tab { background:transparent; border:none; border-bottom:2px solid transparent; color:var(--muted); padding:14px 18px; cursor:pointer; font-size:12px; font-weight:500; letter-spacing:1px; transition:all 0.15s; }
   .tab.active { border-bottom-color:var(--accent); color:var(--accent); }
   .tab:hover:not(.active) { color:var(--text); }
@@ -35,6 +34,8 @@
   @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
   @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.4} }
   @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  @keyframes celebIn { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+  @keyframes checkPop { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 70%{transform:scale(0.9)} 100%{transform:scale(1)} }
 
   #timer-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 24px 28px; margin-bottom:20px; text-align:center; transition:border-color 0.4s,box-shadow 0.4s; }
   #timer-card.focus { border-color:var(--fc,var(--accent)); box-shadow:0 0 56px color-mix(in srgb,var(--fc,var(--accent)) 12%,transparent); }
@@ -48,7 +49,7 @@
 
   #quick-manual { display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--border); animation:slideUp 0.25s ease; text-align:left; }
   .quick-label { font-size:10px; color:var(--muted); letter-spacing:1.5px; margin-bottom:14px; }
-  #qm-new-proj-fields { display:none; background:#0e0e1a; border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:10px; animation:slideUp 0.2s ease; }
+  #qm-new-proj-fields { display:none; background:#0e1020; border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:10px; animation:slideUp 0.2s ease; }
 
   .btn { border:none; border-radius:8px; padding:11px 24px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.15s; }
   .btn:hover { opacity:0.82; transform:translateY(-1px); }
@@ -89,8 +90,8 @@
 
   .field { display:flex; flex-direction:column; gap:7px; }
   .field label { font-size:11px; color:var(--muted); letter-spacing:1.5px; }
-  input[type="text"], input[type="number"], input[type="date"], select { background:#1a1a30; border:1px solid var(--border); border-radius:8px; padding:11px 13px; color:var(--text); font-size:13px; width:100%; transition:border-color 0.15s; }
-  input:focus, select:focus { outline:none; border-color:var(--accent); }
+  input[type="text"], input[type="number"], input[type="date"], select { background:#0e1020; border:1px solid var(--border); border-radius:8px; padding:11px 13px; color:var(--text); font-size:13px; width:100%; transition:border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
   .row { display:flex; gap:10px; }
   .row > * { flex:1; }
   .unit-wrap { position:relative; }
@@ -100,7 +101,7 @@
 
   .modal-overlay { display:none; position:fixed; inset:0; background:#00000099; align-items:center; justify-content:center; z-index:100; padding:20px; backdrop-filter:blur(4px); }
   .modal-overlay.open { display:flex; }
-  .modal-box { background:#16162e; border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; animation:slideUp 0.25s ease; }
+  .modal-box { background:#1a1d3a; border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; animation:slideUp 0.25s ease; }
   .modal-title { font-size:16px; font-weight:600; margin-bottom:20px; }
 
   .dash-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
@@ -156,7 +157,35 @@
 
   input[type="color"] { width:40px; height:40px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px; }
 
-  /* TAREAS */
+  /* Notas por proyecto */
+  .proj-notes-panel { display:none; margin-top:6px; background:#0e1020; border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-size:13px; color:var(--muted); line-height:1.7; white-space:pre-wrap; word-break:break-word; animation:slideUp 0.2s ease; }
+  .proj-notes-panel.open { display:block; }
+  .btn-notes { background:transparent; border:none; color:var(--muted); font-size:11px; cursor:pointer; font-family:'DM Mono',monospace; letter-spacing:0.5px; padding:3px 6px; border-radius:4px; transition:all 0.15s; flex-shrink:0; }
+  .btn-notes:hover { color:var(--accent); background:var(--accent)11; }
+
+  /* Drag & drop */
+  .drag-handle { color:var(--border); cursor:grab; font-size:16px; flex-shrink:0; padding:0 4px; user-select:none; transition:color 0.15s; line-height:1; }
+  .drag-handle:active { cursor:grabbing; }
+  .tarea-item:hover .drag-handle { color:var(--muted); }
+  .tarea-item.dragging { opacity:0.35; border-style:dashed; }
+  .tarea-item.drag-over { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)55; transform:translateY(-2px); }
+
+  /* Export */
+  .btn-export { background:transparent; border:1px solid var(--border); border-radius:8px; padding:7px 14px; color:var(--muted); font-size:11px; font-weight:500; letter-spacing:1px; cursor:pointer; font-family:'DM Mono',monospace; transition:all 0.15s; }
+  .btn-export:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-export:active { transform:translateY(1px); }
+
+  /* Compact mode */
+  body.compact .proj-item { padding:9px 12px; }
+  body.compact .proj-dot  { width:28px; height:28px; }
+  body.compact .proj-name { font-size:13px; }
+  body.compact .proj-meta, body.compact .proj-month { font-size:10px; }
+  body.compact #projects-list { gap:5px; }
+  body.compact .tarea-item { padding:8px 12px; }
+  body.compact .tarea-texto { font-size:14px; }
+  body.compact .tarea-sub-text { font-size:11px; }
+  body.compact .session-item { padding:9px 12px; }
+  body.compact .proj-stat { padding:12px; }
   #panel-tareas { max-width:600px; }
   .tarea-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--card); margin-bottom:7px; transition:opacity 0.2s,background 0.15s; }
   .tarea-item:hover { background:#16162e; }
@@ -167,17 +196,17 @@
   .tarea-check.checked { background:var(--accent); border-color:var(--accent); }
   .tarea-check.checked::after { content:''; width:5px; height:9px; border:2px solid #0d0d1a; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); display:block; }
   .tarea-body { flex:1; min-width:0; }
-  .tarea-texto { font-size:14px; color:var(--text); line-height:1.4; }
-  .tarea-sub-text { font-size:11px; color:var(--muted); margin-top:3px; }
+  .tarea-texto { font-size:16px; color:var(--text); line-height:1.4; }
+  .tarea-sub-text { font-size:13px; color:var(--muted); margin-top:3px; }
   .tarea-actions { display:flex; gap:4px; flex-shrink:0; opacity:0; transition:opacity 0.15s; }
   .tarea-item:hover .tarea-actions { opacity:1; }
   .btn-tarea-action { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:4px 6px; transition:color 0.15s; }
   .btn-tarea-action:hover { color:var(--text); }
   .btn-tarea-action.del:hover { color:#f08080; }
   .badge-tarea { font-size:10px; font-weight:500; padding:2px 9px; border-radius:99px; flex-shrink:0; letter-spacing:0.5px; }
-  .badge-urgente { background:#f0808020; color:#f08080; border:1px solid #f0808040; }
-  .badge-pendiente { background:#7ab3f020; color:#7ab3f0; border:1px solid #7ab3f040; }
-  .badge-despues { background:#5a5a8a20; color:var(--muted); border:1px solid #5a5a8a40; }
+  .badge-urgente { background:#ff5c5c28; color:#ff8080; border:1px solid #ff5c5c66; }
+  .badge-pendiente { background:#4d9de028; color:#7ab8f5; border:1px solid #4d9de066; }
+  .badge-despues { background:#7a7aaa28; color:#aaaad0; border:1px solid #7a7aaa55; }
   .tarea-prio-btn.active[data-prio="urgente"] { background:#f0808020; border-color:#f08080; color:#f08080; }
   .tarea-prio-btn.active[data-prio="pendiente"] { background:#7ab3f020; border-color:#7ab3f0; color:#7ab3f0; }
   .tarea-prio-btn.active[data-prio="despues"] { background:#5a5a8a30; border-color:#5a5a8a; color:var(--muted); }
@@ -204,10 +233,13 @@
 
 <div id="header">
   <div><div id="logo">Kronos</div><div id="logo-sub">TIME TRACKER</div></div>
-  <div id="active-badge">
-    <div id="active-dot"></div>
-    <span id="active-name"></span>
-    <span id="active-elapsed">00:00:00</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button id="btn-compact" title="Modo compacto" style="background:transparent;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">⊟</button>
+    <div id="active-badge">
+      <div id="active-dot"></div>
+      <span id="active-name"></span>
+      <span id="active-elapsed">00:00:00</span>
+    </div>
   </div>
 </div>
 
@@ -291,9 +323,25 @@
       </div>
       <button class="dash-nav-btn" id="dash-next">&#8250;</button>
     </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:20px">
+      <button id="btn-export-csv" class="btn-export">↓ CSV</button>
+      <button id="btn-export-pdf" class="btn-export">↓ PDF</button>
+      <button id="btn-factura-pdf" class="btn-export" style="border-color:#a6e3a144;color:#a6e3a1">↓ Factura</button>
+    </div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">HORAS</div><div class="stat-value" id="dash-hours" style="color:var(--accent)">&#8212;</div></div>
       <div class="stat-card"><div class="stat-label">INGRESOS EST.</div><div class="stat-value" id="dash-earnings" style="color:var(--green)">&#8212;</div></div>
+    </div>
+    <div id="dash-streak-card" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:16px">
+      <div id="dash-streak-flame" style="font-size:36px;line-height:1;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:4px">RACHA ACTIVA</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span id="dash-streak-days" style="font-size:32px;font-weight:300;color:var(--accent)">0</span>
+          <span style="font-size:13px;color:var(--muted)">días seguidos trabajando</span>
+        </div>
+        <div id="dash-streak-sub" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+      </div>
     </div>
     <div class="section-label">POR PROYECTO</div>
     <div id="dash-projects"></div>
@@ -307,6 +355,7 @@
 
   <!-- HISTORIAL -->
   <div id="panel-historial" class="panel">
+    <input type="text" id="hist-search" placeholder="Buscar por nota, proyecto o fecha..." style="margin-bottom:14px;width:100%">
     <div class="filter-bar" id="filter-bar"></div>
     <div id="sessions-list"></div>
   </div>
@@ -324,19 +373,19 @@
         <span style="font-size:11px;color:var(--muted);letter-spacing:1.5px">PROGRESO</span>
         <span id="tareas-pct" style="font-size:22px;font-weight:300;color:var(--accent)">0%</span>
       </div>
-      <div style="height:4px;background:#1e1e3a;border-radius:2px;overflow:hidden;margin-bottom:12px">
+      <div style="height:4px;background:#252850;border-radius:2px;overflow:hidden;margin-bottom:12px">
         <div id="tareas-bar" style="height:100%;border-radius:2px;background:var(--accent);transition:width 0.5s ease;width:0%"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+        <div style="text-align:center;background:#0e1020;border-radius:8px;padding:8px">
           <div id="t-stat-total" style="font-size:18px;font-weight:300">0</div>
           <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">TOTAL</div>
         </div>
-        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+        <div style="text-align:center;background:#0e1020;border-radius:8px;padding:8px">
           <div id="t-stat-done" style="font-size:18px;font-weight:300;color:var(--accent)">0</div>
           <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">LISTAS</div>
         </div>
-        <div style="text-align:center;background:#0d0d1a;border-radius:8px;padding:8px">
+        <div style="text-align:center;background:#0e1020;border-radius:8px;padding:8px">
           <div id="t-stat-left" style="font-size:18px;font-weight:300">0</div>
           <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px">PENDIENTES</div>
         </div>
@@ -344,7 +393,7 @@
     </div>
     <!-- Secciones por prioridad -->
     <div id="tareas-urgente-section" style="display:none;margin-bottom:20px">
-      <div class="section-label" style="color:#f08080">URGENTE</div>
+      <div class="section-label" style="color:#ff8080">URGENTE</div>
       <div id="tareas-urgente-list"></div>
     </div>
     <div id="tareas-pendiente-section" style="display:none;margin-bottom:20px">
@@ -359,14 +408,10 @@
     <div id="tareas-empty" style="text-align:center;color:var(--muted);padding:48px 0">
       <div style="font-size:32px;margin-bottom:12px">✓</div>
       <div style="font-size:14px;margin-bottom:4px">Sin tareas</div>
-      <div style="font-size:12px">Selecciona un proyecto y agrega tu primera tarea</div>
+      <div style="font-size:12px">Agrega tu primera tarea con el botón + Tarea</div>
     </div>
-    <!-- Empty projects state -->
-    <div id="tareas-no-proj" style="display:none;text-align:center;color:var(--muted);padding:48px 0">
-      <div style="font-size:32px;margin-bottom:12px">◷</div>
-      <div style="font-size:14px;margin-bottom:4px">No hay proyectos</div>
-      <div style="font-size:12px">Crea un proyecto en el Timer primero</div>
-    </div>
+    <!-- Empty projects state — ya no bloquea, solo informa -->
+    <div id="tareas-no-proj" style="display:none"></div>
   </div>
 
 </div>
@@ -439,9 +484,49 @@
         </div>
         <span id="proj-img-error" style="font-size:11px;color:#f08080;display:none"></span>
       </div>
+      <div class="field">
+        <label>NOTAS <span style="color:var(--muted);font-weight:300">(opcional)</span></label>
+        <textarea id="proj-notes" placeholder="Links, briefing, contraseñas de staging, contexto del cliente..." style="background:#0e1020;border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:13px;width:100%;resize:vertical;min-height:90px;font-family:'DM Mono',monospace;line-height:1.6;transition:border-color 0.15s"></textarea>
+      </div>
       <div class="row" style="margin-top:4px">
         <button class="btn btn-ghost" id="btn-proj-cancel">Cancelar</button>
         <button class="btn btn-primary" id="btn-proj-save">Crear proyecto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Factura -->
+<div id="modal-factura" class="modal-overlay">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-title">Generar factura</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label>NOMBRE DEL CLIENTE</label><input type="text" id="fac-cliente" placeholder="ej: Empresa S.A.C."></div>
+      <div class="field"><label>RUC / DNI <span style="color:var(--muted);font-weight:300">(opcional)</span></label><input type="text" id="fac-ruc" placeholder="ej: 20123456789"></div>
+      <div class="field"><label>TU NOMBRE / EMPRESA</label><input type="text" id="fac-emisor" placeholder="ej: Renzo Raygada"></div>
+      <div class="field"><label>DESCRIPCIÓN DEL SERVICIO</label><input type="text" id="fac-descripcion" placeholder="ej: Desarrollo web — Mayo 2026"></div>
+      <div class="field"><label>NÚMERO DE FACTURA <span style="color:var(--muted);font-weight:300">(opcional)</span></label><input type="text" id="fac-numero" placeholder="ej: F001-0042"></div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn btn-ghost" id="btn-factura-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-factura-gen" style="background:#a6e3a1;color:#0d0d1a">Generar PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar nota de sesión -->
+<div id="modal-edit-note" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">Editar nota</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="field">
+        <label>NOTA</label>
+        <input type="text" id="edit-note-input" placeholder="Descripción de la sesión...">
+      </div>
+      <div id="edit-note-meta" style="font-size:11px;color:var(--muted)"></div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn btn-ghost" id="btn-edit-note-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-edit-note-save">Guardar</button>
       </div>
     </div>
   </div>
@@ -478,6 +563,19 @@
 
 <!-- Canvas oculto para compresión -->
 <canvas id="img-canvas" style="display:none"></canvas>
+
+<!-- Celebration overlay -->
+<div id="celebration-overlay" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;pointer-events:none">
+  <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+  <div id="celebration-box" style="position:relative;text-align:center;padding:40px 48px;background:#1a1d3a;border:1px solid #252850;border-radius:24px;max-width:380px;width:90%;pointer-events:auto;animation:celebIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both">
+    <div id="celebration-emoji" style="font-size:56px;margin-bottom:16px;line-height:1"></div>
+    <div id="celebration-msg" style="font-size:22px;font-weight:500;color:#f0f0ff;line-height:1.3;margin-bottom:8px"></div>
+    <div id="celebration-sub" style="font-size:13px;color:#8a8ab8;margin-bottom:24px"></div>
+    <div style="height:3px;background:#252850;border-radius:2px;overflow:hidden">
+      <div id="celebration-timer-bar" style="height:100%;background:var(--accent);border-radius:2px;width:100%;transition:width linear"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 const LS = {
@@ -596,6 +694,9 @@ function startTimer(projectId) {
     document.getElementById("active-elapsed").textContent=fmt(elapsed);
     const p=active?getProject(active.projectId):null;
     if (p?.rate>0) document.getElementById("timer-earning").textContent="S/. "+((elapsed/3600)*p.rate).toFixed(2);
+    // Título dinámico del tab
+    document.title="● "+fmt(elapsed)+" — "+( p?.name||"Kronos");
+    updateFavicon(true);
   },500);
   renderTimerPanel();
 }
@@ -631,9 +732,13 @@ document.getElementById("btn-stop").addEventListener("click",()=>{
   setTimeout(()=>{savedEl.style.display="none";},4500);
 });
 
-// ── PUNTO 1: beforeunload — guardar sesión si timer activo ───────────────────
-window.addEventListener("beforeunload",()=>{
-  if (active&&elapsed>=5) saveActiveSession();
+// ── beforeunload — guardar sesión + confirmar si timer activo ─────────────────
+window.addEventListener("beforeunload", e => {
+  if (active && elapsed >= 5) {
+    saveActiveSession();
+    e.preventDefault();
+    e.returnValue = "Tienes un timer activo. ¿Salir de todas formas? La sesión se guardó.";
+  }
 });
 
 // ── visibilitychange ─────────────────────────────────────────────────────────
@@ -659,6 +764,8 @@ function resetVisuals() {
   document.getElementById("active-badge").style.display="none";
   document.getElementById("timer-card").classList.remove("focus");
   document.getElementById("btn-toggle-manual").style.visibility="visible";
+  document.title="Kronos — Time Tracker";
+  updateFavicon(false);
 }
 function resetTimer() { clearInterval(interval); active=null; elapsed=0; startTs=null; running=false; resetVisuals(); renderTimerPanel(); }
 function updateActiveBadge() {
@@ -708,6 +815,21 @@ function renderTimerPanel() {
       actions.appendChild(editBtn); actions.appendChild(delBtn);
     }
     row.appendChild(btn); row.appendChild(actions); list.appendChild(row);
+
+    // Notas del proyecto
+    if (p.notes) {
+      const notesWrap=document.createElement("div"); notesWrap.style.cssText="margin-bottom:4px";
+      const notesToggle=document.createElement("button"); notesToggle.className="btn-notes";
+      notesToggle.textContent="📝 notas";
+      const notesPanel=document.createElement("div"); notesPanel.className="proj-notes-panel";
+      notesPanel.textContent=p.notes;
+      notesToggle.addEventListener("click",()=>{
+        const open=notesPanel.classList.toggle("open");
+        notesToggle.textContent=open?"▲ notas":"📝 notas";
+      });
+      notesWrap.appendChild(notesToggle); notesWrap.appendChild(notesPanel);
+      list.appendChild(notesWrap);
+    }
   });
   populateQMSelect();
 }
@@ -835,6 +957,7 @@ function openProjModal(id=null) {
     document.getElementById("proj-color").value=p.color;
     document.getElementById("proj-color-preview").style.background=p.color;
     document.getElementById("proj-color-hex").textContent=p.color;
+    document.getElementById("proj-notes").value=p.notes||"";
     if (p.img) {
       pendingImgB64=p.img;
       document.getElementById("proj-img-preview").src=p.img;
@@ -848,6 +971,7 @@ function openProjModal(id=null) {
   } else {
     document.getElementById("proj-name").value="";
     document.getElementById("proj-rate").value="";
+    document.getElementById("proj-notes").value="";
     document.getElementById("proj-color").value="#c792ea";
     document.getElementById("proj-color-preview").style.background="#c792ea";
     document.getElementById("proj-color-hex").textContent="#c792ea";
@@ -874,12 +998,13 @@ document.getElementById("btn-proj-save").addEventListener("click",()=>{
   const name=document.getElementById("proj-name").value.trim();
   const color=document.getElementById("proj-color").value;
   const rate=parseFloat(document.getElementById("proj-rate").value)||0;
+  const notes=document.getElementById("proj-notes").value.trim();
   if (!name){document.getElementById("proj-name").focus();return;}
   if (editingProjId) {
     const proj=projects.find(p=>p.id===editingProjId);
-    if (proj){proj.name=name;proj.color=color;proj.rate=rate;proj.img=pendingImgB64||null;}
+    if (proj){proj.name=name;proj.color=color;proj.rate=rate;proj.img=pendingImgB64||null;proj.notes=notes;}
   } else {
-    projects.push({id:Date.now().toString(),name,color,rate,img:pendingImgB64||null});
+    projects.push({id:Date.now().toString(),name,color,rate,img:pendingImgB64||null,notes});
   }
   saveProjects(); closeProjModal(); renderTimerPanel();
 });
@@ -943,6 +1068,23 @@ document.getElementById("modal-del-session").addEventListener("click",e=>{
   if (e.target===document.getElementById("modal-del-session")){document.getElementById("modal-del-session").classList.remove("open");pendingDelSession=null;}
 });
 
+// ── Favicon dinámico ──────────────────────────────────────────────────────────
+(function initFavicon() {
+  const link = document.createElement("link");
+  link.rel = "icon"; link.type = "image/svg+xml"; link.id = "favicon-el";
+  document.head.appendChild(link);
+  updateFavicon(false);
+})();
+
+function updateFavicon(active) {
+  const el = document.getElementById("favicon-el");
+  if (!el) return;
+  const svg = active
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#12142a"/><circle cx="16" cy="16" r="9" fill="none" stroke="#c792ea" stroke-width="2.5"/><line x1="16" y1="16" x2="16" y2="9" stroke="#c792ea" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="16" x2="21" y2="19" stroke="#a6e3a1" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="1.5" fill="#c792ea"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#12142a"/><circle cx="16" cy="16" r="9" fill="none" stroke="#252850" stroke-width="2.5"/><line x1="16" y1="16" x2="16" y2="9" stroke="#8a8ab8" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="16" x2="21" y2="19" stroke="#8a8ab8" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="1.5" fill="#8a8ab8"/></svg>`;
+  el.href = "data:image/svg+xml," + encodeURIComponent(svg);
+}
+
 document.addEventListener("keydown",e=>{
   if (e.key==="Escape"){
     closeProjModal();
@@ -950,9 +1092,43 @@ document.addEventListener("keydown",e=>{
     document.getElementById("modal-del-proj").classList.remove("open");
     document.getElementById("modal-del-session").classList.remove("open");
     document.getElementById("modal-del-tarea").classList.remove("open");
+    document.getElementById("modal-edit-note").classList.remove("open");
     document.getElementById("lightbox").style.display="none";
+    hideCelebration();
+  }
+  // Enter para guardar en modales abiertos
+  if (e.key==="Enter" && !e.shiftKey) {
+    if (document.getElementById("modal-proj").classList.contains("open")) {
+      e.preventDefault(); document.getElementById("btn-proj-save").click();
+    } else if (document.getElementById("modal-tarea").classList.contains("open")) {
+      e.preventDefault(); document.getElementById("btn-tarea-save").click();
+    } else if (document.getElementById("modal-edit-note").classList.contains("open")) {
+      e.preventDefault(); document.getElementById("btn-edit-note-save").click();
+    }
   }
 });
+
+// ── Streak (racha de días) ────────────────────────────────────────────────────
+function calcStreak() {
+  // Get all unique dates with sessions, sorted desc
+  const dates = [...new Set(sessions.map(s => s.date).filter(Boolean))].sort().reverse();
+  if (dates.length === 0) return { streak: 0, lastDate: null };
+
+  const today    = todayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  // Streak only counts if user worked today OR yesterday (grace: started today but not finished)
+  if (dates[0] !== today && dates[0] !== yesterday) return { streak: 0, lastDate: dates[0] };
+
+  let streak = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1] + "T12:00:00");
+    const curr = new Date(dates[i]      + "T12:00:00");
+    const diffDays = Math.round((prev - curr) / 86400000);
+    if (diffDays === 1) { streak++; } else { break; }
+  }
+  return { streak, lastDate: dates[0] };
+}
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 document.getElementById("dash-prev").addEventListener("click",()=>{
@@ -984,6 +1160,35 @@ function renderDashboard() {
   document.getElementById("dash-hours").textContent=totalSec>0?fmtH(totalSec):"—";
   document.getElementById("dash-earnings").textContent=totalEarn>0?"S/. "+totalEarn.toFixed(0):"—";
 
+  // Racha
+  const { streak, lastDate } = calcStreak();
+  const streakCard = document.getElementById("dash-streak-card");
+  if (streak > 0) {
+    streakCard.style.display = "flex";
+    const flame = streak >= 30 ? "🔥🔥🔥" : streak >= 14 ? "🔥🔥" : streak >= 7 ? "🔥" : "⚡";
+    document.getElementById("dash-streak-flame").textContent = flame;
+    document.getElementById("dash-streak-days").textContent  = streak;
+    const msgs = {
+      1:  "Arrancaste. ¡Que no se rompa!",
+      2:  "Dos días seguidos. Buen comienzo.",
+      3:  "Tres días. Ya es un hábito.",
+      5:  "¡Una semana laboral completa!",
+      7:  "Una semana entera. Imparable.",
+      14: "Dos semanas seguidas. Élite.",
+      21: "21 días. Modo automático activado.",
+      30: "Un mes entero. Leyenda.",
+    };
+    const keys   = Object.keys(msgs).map(Number).sort((a,b)=>b-a);
+    const msgKey = keys.find(k => streak >= k) || 1;
+    document.getElementById("dash-streak-sub").textContent = msgs[msgKey] || "¡Sigue así!";
+    // Accent color escalates with streak
+    const color  = streak >= 14 ? "#ff8080" : streak >= 7 ? "#ffd700" : "var(--accent)";
+    document.getElementById("dash-streak-days").style.color = color;
+    streakCard.style.borderColor = color + "44";
+  } else {
+    streakCard.style.display = "none";
+  }
+
   const container=document.getElementById("dash-projects");
   container.innerHTML="";
   if (projects.length===0){
@@ -1006,6 +1211,23 @@ function renderDashboard() {
         '</div>'+
       '</div>'+
       '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+      // ── Meta mensual ──
+      '<div class="rate-row" style="margin-top:10px;margin-bottom:'+(p.goalHrs>0?'4':'0')+'px">'+
+        '<span class="rate-label">Meta mensual:</span>'+
+        (p.goalHrs>0
+          ? '<span style="font-size:11px;color:'+p.color+'">'+(Math.min(100,Math.round(p.secs/(p.goalHrs*3600)*100)))+'% · '+(p.goalHrs*3600>p.secs?fmtH(p.goalHrs*3600-p.secs)+' restantes':'¡Meta alcanzada! 🎯')+'</span>'
+          : '')+
+        '<button class="btn-rate btn-goal" data-id="'+p.id+'" style="margin-left:auto">'+(p.goalHrs>0?p.goalHrs+'h · editar':'+ Agregar meta')+'</button>'+
+        '<div class="rate-edit" id="goal-edit-'+p.id+'">'+
+          '<input type="number" id="goal-input-'+p.id+'" placeholder="horas/mes" value="'+(p.goalHrs||"")+'">'+
+          '<button class="btn-goal-ok" data-id="'+p.id+'" style="background:var(--accent);border:none;border-radius:4px;padding:5px 12px;color:#0d0d1a;font-size:11px;font-weight:700;cursor:pointer;font-family:\'DM Mono\',monospace">OK</button>'+
+          '<button class="btn-goal-cancel" data-id="'+p.id+'" style="background:transparent;border:1px solid var(--border);border-radius:4px;padding:5px 9px;color:var(--muted);font-size:11px;cursor:pointer;font-family:\'DM Mono\',monospace">✕</button>'+
+        '</div>'+
+      '</div>'+
+      (p.goalHrs>0
+        ? '<div class="bar-track" style="margin-bottom:10px"><div class="bar-fill" style="width:'+Math.min(100,Math.round(p.secs/(p.goalHrs*3600)*100))+'%;background:'+p.color+'55;border:1px solid '+p.color+'88"></div></div>'
+        : '')+
+      // ── Tarifa ──
       '<div class="rate-row">'+
         '<span class="rate-label">Tarifa:</span>'+
         '<button class="btn-rate" data-id="'+p.id+'">'+(p.rate>0?"S/. "+p.rate+"/hr · editar":"+ Agregar tarifa")+'</button>'+
@@ -1033,6 +1255,24 @@ function renderDashboard() {
     });
   });
   container.querySelectorAll(".btn-cancel").forEach(btn=>{
+    btn.addEventListener("click",()=>renderDashboard());
+  });
+  container.querySelectorAll(".btn-goal").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      btn.style.display="none";
+      document.getElementById("goal-edit-"+btn.dataset.id).style.display="flex";
+      document.getElementById("goal-input-"+btn.dataset.id).focus();
+    });
+  });
+  container.querySelectorAll(".btn-goal-ok").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const val=parseFloat(document.getElementById("goal-input-"+btn.dataset.id).value)||0;
+      const proj=projects.find(p=>p.id===btn.dataset.id);
+      if (proj){proj.goalHrs=val;saveProjects();}
+      renderDashboard();
+    });
+  });
+  container.querySelectorAll(".btn-goal-cancel").forEach(btn=>{
     btn.addEventListener("click",()=>renderDashboard());
   });
   renderHistoric();
@@ -1079,6 +1319,12 @@ function renderHistoric() {
 }
 
 // ── Historial ─────────────────────────────────────────────────────────────────
+let histSearch = "";
+document.getElementById("hist-search").addEventListener("input", e => {
+  histSearch = e.target.value.toLowerCase().trim();
+  renderHistorial();
+});
+
 function renderHistorial() {
   const bar=document.getElementById("filter-bar");
   bar.innerHTML="";
@@ -1090,9 +1336,18 @@ function renderHistorial() {
   });
   const list=document.getElementById("sessions-list");
   list.innerHTML="";
-  const filtered=histFilter==="all"?sessions:sessions.filter(s=>s.projectId===histFilter);
+  let filtered=histFilter==="all"?sessions:sessions.filter(s=>s.projectId===histFilter);
+  // Search filter
+  if (histSearch) {
+    filtered=filtered.filter(s=>{
+      const proj=getProject(s.projectId);
+      return (proj?.name||"").toLowerCase().includes(histSearch)||
+             (s.note||"").toLowerCase().includes(histSearch)||
+             (s.date||"").includes(histSearch);
+    });
+  }
   if (filtered.length===0){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">◷</div><div class="empty-text">Sin sesiones registradas</div><div class="empty-sub">Inicia un timer o registra manualmente</div></div>';
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">◷</div><div class="empty-text">'+(histSearch?"Sin resultados para \""+escHtml(histSearch)+"\"":" Sin sesiones registradas")+'</div><div class="empty-sub">'+(histSearch?"Prueba con otro término":"Inicia un timer o registra manualmente")+'</div></div>';
     return;
   }
   filtered.forEach(s=>{
@@ -1107,60 +1362,95 @@ function renderHistorial() {
           '<span class="session-hours" style="color:'+(proj?.color||"var(--muted)")+'">'+fmtH(s.duration)+'</span>'+
         '</div>'+
         '<div class="session-meta">'+
-          '<span class="session-note">'+s.date+' · '+(s.type==="manual"?"manual":"timer")+(s.note?" · "+s.note:"")+'</span>'+
+          '<span class="session-note">'+s.date+' · '+(s.type==="manual"?"manual":"timer")+(s.note?' · <em style="color:var(--text)">'+escHtml(s.note)+'</em>':"")+'</span>'+
           (earning>0?'<span class="session-earn">S/. '+earning.toFixed(2)+'</span>':'')+
         '</div>'+
       '</div>'+
+      '<button class="btn-edit-note" data-id="'+s.id+'" title="Editar nota" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 5px;transition:color 0.15s;flex-shrink:0">✎</button>'+
       '<button class="btn-del" data-id="'+s.id+'">✕</button>';
     list.appendChild(div);
   });
-  // PUNTO 4: usar modal de confirmación
+  list.querySelectorAll(".btn-edit-note").forEach(btn=>{
+    btn.addEventListener("mouseover",()=>btn.style.color="var(--accent)");
+    btn.addEventListener("mouseout",()=>btn.style.color="var(--muted)");
+    btn.addEventListener("click",()=>openEditNoteModal(btn.dataset.id));
+  });
   list.querySelectorAll(".btn-del").forEach(btn=>{
     btn.addEventListener("click",()=>openDelSessionModal(btn.dataset.id));
   });
 }
+
+// ── Edit note modal ───────────────────────────────────────────────────────────
+let editingNoteId = null;
+function openEditNoteModal(id) {
+  editingNoteId = id;
+  const s = sessions.find(x => x.id === id);
+  const proj = getProject(s?.projectId);
+  document.getElementById("edit-note-input").value = s?.note || "";
+  document.getElementById("edit-note-meta").textContent = (proj?.name || "Proyecto eliminado") + " · " + (s?.date || "") + " · " + fmtH(s?.duration || 0);
+  document.getElementById("modal-edit-note").classList.add("open");
+  setTimeout(() => document.getElementById("edit-note-input").focus(), 60);
+}
+document.getElementById("btn-edit-note-cancel").addEventListener("click", () => {
+  document.getElementById("modal-edit-note").classList.remove("open"); editingNoteId = null;
+});
+document.getElementById("modal-edit-note").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-edit-note")) {
+    document.getElementById("modal-edit-note").classList.remove("open"); editingNoteId = null;
+  }
+});
+document.getElementById("btn-edit-note-save").addEventListener("click", () => {
+  if (!editingNoteId) return;
+  const s = sessions.find(x => x.id === editingNoteId);
+  if (s) { s.note = document.getElementById("edit-note-input").value.trim(); saveSessions(); }
+  document.getElementById("modal-edit-note").classList.remove("open");
+  editingNoteId = null;
+  renderHistorial();
+});
+
+// ── Compact mode ──────────────────────────────────────────────────────────────
+let compactMode = LS.get("kron_compact") || false;
+function applyCompact() {
+  document.body.classList.toggle("compact", compactMode);
+  const btn = document.getElementById("btn-compact");
+  btn.style.color     = compactMode ? "var(--accent)"  : "var(--muted)";
+  btn.style.borderColor = compactMode ? "var(--accent)" : "var(--border)";
+  btn.title = compactMode ? "Vista normal" : "Modo compacto";
+}
+applyCompact();
+document.getElementById("btn-compact").addEventListener("click", () => {
+  compactMode = !compactMode;
+  LS.set("kron_compact", compactMode);
+  applyCompact();
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderTimerPanel();
 
 // ── TAREAS ────────────────────────────────────────────────────────────────────
 let tasks            = LS.get("kron_tasks") || [];
-let tareasProj       = null;   // projectId seleccionado en TAREAS
-let editingTareaId   = null;   // null = nueva, string = editando
+let tareasProj       = null;
+let editingTareaId   = null;
 let pendingDelTarea  = null;
 let selectedPrio     = "urgente";
+const celebratedSet  = new Set(); // proyectos que ya recibieron la celebración en esta sesión
 
 function saveTasks() { LS.set("kron_tasks", tasks); }
 
 function populateTareasSelect() {
   const sel = document.getElementById("tareas-proj-select");
   const prev = sel.value;
-  sel.innerHTML = "";
-  if (projects.length === 0) {
-    sel.innerHTML = '<option value="">Sin proyectos</option>';
-    tareasProj = null;
-    return;
-  }
+  sel.innerHTML = '<option value="__none__">— Sin proyecto —</option>';
   projects.forEach(p => {
     const o = document.createElement("option");
     o.value = p.id; o.textContent = p.name; sel.appendChild(o);
   });
-  if (prev && projects.find(p => p.id === prev)) sel.value = prev;
+  if (prev && (prev === "__none__" || projects.find(p => p.id === prev))) sel.value = prev;
   tareasProj = sel.value;
 }
 
 function renderTareas() {
   populateTareasSelect();
-  if (projects.length === 0) {
-    document.getElementById("tareas-no-proj").style.display = "block";
-    document.getElementById("tareas-empty").style.display = "none";
-    document.getElementById("tareas-progress-block").style.display = "none";
-    document.getElementById("tareas-urgente-section").style.display = "none";
-    document.getElementById("tareas-pendiente-section").style.display = "none";
-    document.getElementById("tareas-despues-section").style.display = "none";
-    document.getElementById("btn-nueva-tarea").style.display = "none";
-    return;
-  }
   document.getElementById("tareas-no-proj").style.display = "none";
   document.getElementById("btn-nueva-tarea").style.display = "";
   tareasProj = document.getElementById("tareas-proj-select").value;
@@ -1195,18 +1485,38 @@ function renderTareas() {
   renderTareaSection("urgente",   urgente);
   renderTareaSection("pendiente", pendiente);
   renderTareaSection("despues",   despues);
+
+  // Celebración al llegar al 100% — solo una vez por proyecto por sesión
+  if (pct === 100 && total > 0) {
+    if (!celebratedSet.has(tareasProj)) {
+      celebratedSet.add(tareasProj);
+      showCelebration(tareasProj);
+    }
+  } else {
+    // Si ya no está al 100% (desmarcaron una tarea), permitir celebrar de nuevo
+    celebratedSet.delete(tareasProj);
+  }
 }
 
 function renderTareaSection(prio, list) {
-  const section = document.getElementById("tareas-" + prio + "-section");
+  const section   = document.getElementById("tareas-" + prio + "-section");
   const container = document.getElementById("tareas-" + prio + "-list");
   container.innerHTML = "";
   if (list.length === 0) { section.style.display = "none"; return; }
   section.style.display = "block";
-  list.forEach(t => {
+
+  // Sort by order field
+  const sorted = [...list].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  let dragSrcId = null;
+
+  sorted.forEach(t => {
     const div = document.createElement("div");
-    div.className = "tarea-item" + (t.done ? " done" : "");
-    div.innerHTML =
+    div.className  = "tarea-item" + (t.done ? " done" : "");
+    div.draggable  = true;
+    div.dataset.id = t.id;
+    div.innerHTML  =
+      '<div class="drag-handle" title="Arrastrar">⠿</div>' +
       '<div class="tarea-check' + (t.done ? " checked" : "") + '" data-id="' + t.id + '"></div>' +
       '<div class="tarea-body">' +
         '<div class="tarea-texto">' + escHtml(t.texto) + '</div>' +
@@ -1219,11 +1529,57 @@ function renderTareaSection(prio, list) {
       '</div>';
     container.appendChild(div);
   });
-  // Check toggle
+
+  // ── Drag events ──
+  container.querySelectorAll(".tarea-item").forEach(item => {
+    item.addEventListener("dragstart", e => {
+      dragSrcId = item.dataset.id;
+      item.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    item.addEventListener("dragend", () => {
+      item.classList.remove("dragging");
+      container.querySelectorAll(".tarea-item").forEach(i => i.classList.remove("drag-over"));
+    });
+    item.addEventListener("dragover", e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      container.querySelectorAll(".tarea-item").forEach(i => i.classList.remove("drag-over"));
+      if (item.dataset.id !== dragSrcId) item.classList.add("drag-over");
+    });
+    item.addEventListener("drop", e => {
+      e.preventDefault();
+      if (!dragSrcId || dragSrcId === item.dataset.id) return;
+      // Reorder in tasks array
+      const items   = [...container.querySelectorAll(".tarea-item")].map(el => el.dataset.id);
+      const srcIdx  = items.indexOf(dragSrcId);
+      const dstIdx  = items.indexOf(item.dataset.id);
+      // Reorder items array
+      const reordered = [...items];
+      reordered.splice(srcIdx, 1);
+      reordered.splice(dstIdx, 0, dragSrcId);
+      // Persist new order
+      reordered.forEach((id, idx) => {
+        const t = tasks.find(x => x.id === id);
+        if (t) t.order = idx;
+      });
+      saveTasks();
+      renderTareas();
+    });
+  });
+
+  // ── Check toggle ──
   container.querySelectorAll(".tarea-check").forEach(chk => {
     chk.addEventListener("click", () => {
       const t = tasks.find(x => x.id === chk.dataset.id);
-      if (t) { t.done = !t.done; saveTasks(); renderTareas(); }
+      if (t) {
+        t.done = !t.done;
+        chk.style.animation = "none";
+        chk.offsetWidth;
+        chk.style.animation = "checkPop 0.3s ease";
+        saveTasks();
+        setTimeout(() => renderTareas(), 150);
+      }
     });
   });
   // Edit
@@ -1273,9 +1629,9 @@ function openTareaModal(projectId, tareaId = null) {
 }
 
 const PRIO_STYLES = {
-  urgente:   { bg:"#f0808020", border:"#f08080", color:"#f08080" },
-  pendiente: { bg:"#7ab3f020", border:"#7ab3f0", color:"#7ab3f0" },
-  despues:   { bg:"#5a5a8a30", border:"#5a5a8a", color:"var(--muted)" },
+  urgente:   { bg:"#ff5c5c28", border:"#ff5c5c66", color:"#ff8080" },
+  pendiente: { bg:"#4d9de028", border:"#4d9de066", color:"#7ab8f5" },
+  despues:   { bg:"#7a7aaa28", border:"#7a7aaa55", color:"#aaaad0" },
 };
 
 function updatePrioBtns() {
@@ -1305,7 +1661,9 @@ document.getElementById("btn-tarea-save").addEventListener("click", () => {
     const t = tasks.find(x => x.id === editingTareaId);
     if (t) { t.texto = texto; t.sub = sub; t.prio = selectedPrio; }
   } else {
-    tasks.push({ id: Date.now().toString(), projectId: tareasProj, texto, sub, prio: selectedPrio, done: false });
+    const projTasks = tasks.filter(t => t.projectId === tareasProj && t.prio === selectedPrio);
+    const maxOrder  = projTasks.reduce((m, t) => Math.max(m, t.order ?? 0), -1);
+    tasks.push({ id: Date.now().toString(), projectId: tareasProj, texto, sub, prio: selectedPrio, done: false, order: maxOrder + 1 });
   }
   saveTasks(); closeTareaModal(); renderTareas();
 });
@@ -1339,7 +1697,381 @@ document.getElementById("modal-del-tarea").addEventListener("click", e => {
     document.getElementById("modal-del-tarea").classList.remove("open"); pendingDelTarea = null;
   }
 });
+// ── Celebration ───────────────────────────────────────────────────────────────
+const CELEBRATION_MSGS = [
+  { emoji:"🏆", msg:"¡Lo lograste!", sub:"Todas las tareas completadas. Eres imparable." },
+  { emoji:"🔥", msg:"¡En llamas!", sub:"Cero pendientes. Así se hace." },
+  { emoji:"⚡", msg:"¡Modo bestia!", sub:"Lista completa. Ahora descansa un momento." },
+  { emoji:"🎯", msg:"¡Bullseye!", sub:"100% completado. Misión cumplida." },
+  { emoji:"🚀", msg:"¡Despegaste!", sub:"Todo resuelto. El siguiente nivel te espera." },
+  { emoji:"💎", msg:"¡Impecable!", sub:"Sin una sola tarea pendiente. Perfecto." },
+  { emoji:"🌟", msg:"¡Estrella total!", sub:"Completaste todo. Kronos está orgulloso." },
+  { emoji:"👑", msg:"¡Eres la corona!", sub:"Lista vacía. Tú mandas hoy." },
+];
+
+let celebrationTimeout = null;
+let confettiInterval   = null;
+
+function showCelebration(projId) {
+  const data = CELEBRATION_MSGS[Math.floor(Math.random() * CELEBRATION_MSGS.length)];
+  document.getElementById("celebration-emoji").textContent = data.emoji;
+  document.getElementById("celebration-msg").textContent   = data.msg;
+  document.getElementById("celebration-sub").textContent   = data.sub;
+
+  const overlay = document.getElementById("celebration-overlay");
+  overlay.style.display = "flex";
+
+  // Timer bar
+  const bar = document.getElementById("celebration-timer-bar");
+  bar.style.transition = "none";
+  bar.style.width = "100%";
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = "width 3.8s linear";
+    bar.style.width = "0%";
+  }));
+
+  // Confetti
+  startConfetti();
+
+  // Auto-close after 4s
+  clearTimeout(celebrationTimeout);
+  celebrationTimeout = setTimeout(() => hideCelebration(), 4000);
+
+  // Click to dismiss
+  overlay.onclick = () => hideCelebration();
+}
+
+function hideCelebration() {
+  document.getElementById("celebration-overlay").style.display = "none";
+  clearTimeout(celebrationTimeout);
+  stopConfetti();
+}
+
+function startConfetti() {
+  const canvas  = document.getElementById("confetti-canvas");
+  const ctx     = canvas.getContext("2d");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ["#c792ea","#a6e3a1","#7ab8f5","#ff8080","#ffd700","#ff9de2"];
+  const pieces = Array.from({length: 90}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * -canvas.height * 0.5,
+    r: Math.random() * 7 + 3,
+    d: Math.random() * 3 + 1.5,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    tilt: Math.random() * 10 - 5,
+    tiltAngle: 0,
+    tiltSpeed: Math.random() * 0.07 + 0.05,
+  }));
+
+  clearInterval(confettiInterval);
+  confettiInterval = setInterval(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.tiltAngle += p.tiltSpeed;
+      p.y += p.d;
+      p.tilt = Math.sin(p.tiltAngle) * 12;
+      if (p.y > canvas.height) {
+        p.y = -10; p.x = Math.random() * canvas.width;
+      }
+      ctx.beginPath();
+      ctx.lineWidth = p.r;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+      ctx.stroke();
+    });
+  }, 16);
+}
+
+// ── Factura PDF ───────────────────────────────────────────────────────────────
+document.getElementById("btn-factura-pdf").addEventListener("click", () => {
+  const ms = sessions.filter(s => monthOf(s.date) === dashMonth);
+  if (ms.length === 0) { alert("Sin sesiones en " + fmtMonthLabel(dashMonth)); return; }
+  document.getElementById("modal-factura").classList.add("open");
+  setTimeout(() => document.getElementById("fac-cliente").focus(), 60);
+});
+document.getElementById("btn-factura-cancel").addEventListener("click", () => {
+  document.getElementById("modal-factura").classList.remove("open");
+});
+document.getElementById("modal-factura").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-factura"))
+    document.getElementById("modal-factura").classList.remove("open");
+});
+document.getElementById("btn-factura-gen").addEventListener("click", () => {
+  const cliente     = document.getElementById("fac-cliente").value.trim() || "Cliente";
+  const ruc         = document.getElementById("fac-ruc").value.trim();
+  const emisor      = document.getElementById("fac-emisor").value.trim() || "Kronos User";
+  const descripcion = document.getElementById("fac-descripcion").value.trim() || ("Servicios — " + fmtMonthLabel(dashMonth));
+  const numero      = document.getElementById("fac-numero").value.trim() || ("F001-" + Date.now().toString().slice(-4));
+  document.getElementById("modal-factura").classList.remove("open");
+
+  const ms = sessions.filter(s => monthOf(s.date) === dashMonth);
+  if (typeof window.jspdf === "undefined") {
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    script.onload = () => generateFactura(ms, { cliente, ruc, emisor, descripcion, numero });
+    document.head.appendChild(script);
+  } else {
+    generateFactura(ms, { cliente, ruc, emisor, descripcion, numero });
+  }
+});
+
+function generateFactura(ms, { cliente, ruc, emisor, descripcion, numero }) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const W = 210, M = 18;
+  let y = 20;
+
+  // Header band
+  doc.setFillColor(18, 20, 42);
+  doc.rect(0, 0, W, 42, "F");
+
+  // Logo
+  doc.setTextColor(199, 146, 234); doc.setFontSize(24); doc.setFont("helvetica","bold");
+  doc.text("KRONOS", M, y + 6); 
+  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(138,138,184);
+  doc.text("TIME TRACKER", M, y + 13);
+
+  // Factura label
+  doc.setTextColor(166,227,161); doc.setFontSize(18); doc.setFont("helvetica","bold");
+  doc.text("FACTURA", W - M, y + 6, { align:"right" });
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(138,138,184);
+  doc.text(numero, W - M, y + 13, { align:"right" });
+  doc.text("Fecha: " + todayStr(), W - M, y + 19, { align:"right" });
+  doc.text("Período: " + fmtMonthLabel(dashMonth), W - M, y + 25, { align:"right" });
+  y = 52;
+
+  // Emisor / Cliente
+  const colW = (W - M * 2 - 10) / 2;
+  [["DE:", emisor], ["PARA:", cliente + (ruc ? "\n" + ruc : "")]].forEach((item, i) => {
+    const x = M + i * (colW + 10);
+    doc.setFillColor(26, 29, 58); doc.roundedRect(x, y, colW, 22, 2, 2, "F");
+    doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","bold");
+    doc.text(item[0], x + 8, y + 7);
+    doc.setTextColor(240,240,255); doc.setFontSize(10); doc.setFont("helvetica","normal");
+    const lines = item[1].split("\n");
+    lines.forEach((l, li) => doc.text(l, x + 8, y + 14 + li * 5));
+  });
+  y += 30;
+
+  // Description
+  doc.setFillColor(26, 29, 58); doc.roundedRect(M, y, W - M * 2, 12, 2, 2, "F");
+  doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.text("DESCRIPCIÓN DEL SERVICIO", M + 6, y + 5);
+  doc.setTextColor(240,240,255); doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  doc.text(descripcion, M + 6, y + 10);
+  y += 18;
+
+  // Table header
+  doc.setFillColor(199,146,234,40); doc.rect(M, y, W - M * 2, 7, "F");
+  doc.setTextColor(199,146,234); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  const cols = [M+3, M+50, M+90, M+125, M+155];
+  ["PROYECTO","FECHA","DURACIÓN","TARIFA","SUBTOTAL"].forEach((h,i) => doc.text(h, cols[i], y+4.8));
+  y += 9;
+
+  // By project summary lines
+  const projIds = [...new Set(ms.map(s => s.projectId))];
+  let grandTotal = 0;
+  projIds.forEach((pid, idx) => {
+    if (y > 245) { doc.addPage(); y = 20; }
+    const proj  = getProject(pid);
+    const pSecs = ms.filter(s => s.projectId === pid).reduce((a,s) => a + s.duration, 0);
+    const rate  = proj?.rate || 0;
+    const subtotal = (pSecs / 3600) * rate;
+    grandTotal += subtotal;
+    if (idx % 2 === 0) { doc.setFillColor(22,24,48); doc.rect(M, y-0.5, W-M*2, 7, "F"); }
+    doc.setTextColor(240,240,255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.text(proj?.name || "Proyecto eliminado", cols[0], y+4);
+    doc.text(ms.filter(s=>s.projectId===pid).length+" sesiones", cols[1], y+4);
+    doc.text(fmtH(pSecs), cols[2], y+4);
+    doc.text(rate > 0 ? "S/. "+rate+"/hr" : "—", cols[3], y+4);
+    doc.text(subtotal > 0 ? "S/. "+subtotal.toFixed(2) : "—", cols[4], y+4);
+    y += 7;
+  });
+  y += 6;
+
+  // Total box
+  doc.setFillColor(166,227,161,30); doc.setDrawColor(166,227,161);
+  doc.roundedRect(W - M - 70, y, 70, 18, 3, 3, "FD");
+  doc.setTextColor(138,138,184); doc.setFontSize(9); doc.setFont("helvetica","bold");
+  doc.text("TOTAL A COBRAR", W - M - 35, y + 6, { align:"center" });
+  doc.setTextColor(166,227,161); doc.setFontSize(16);
+  doc.text("S/. " + grandTotal.toFixed(2), W - M - 35, y + 14, { align:"center" });
+  y += 28;
+
+  // Payment note
+  doc.setFillColor(26,29,58); doc.roundedRect(M, y, W-M*2, 12, 2, 2, "F");
+  doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","normal");
+  doc.text("Este documento fue generado automáticamente por Kronos Time Tracker · " + todayStr(), M+6, y+7);
+
+  // Footer
+  doc.setTextColor(60,60,80); doc.setFontSize(7);
+  doc.text("Kronos Time Tracker · rraygada2.github.io/Kronos", W/2, 287, { align:"center" });
+
+  doc.save("factura_" + numero.replace(/\//g,"-") + "_" + dashMonth + ".pdf");
+}
+
+function stopConfetti() {
+  clearInterval(confettiInterval);
+  const canvas = document.getElementById("confetti-canvas");
+  canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ── Exportar CSV ──────────────────────────────────────────────────────────────
+document.getElementById("btn-export-csv").addEventListener("click", () => {
+  const ms = sessions.filter(s => monthOf(s.date) === dashMonth);
+  if (ms.length === 0) { alert("Sin sesiones en " + fmtMonthLabel(dashMonth)); return; }
+
+  const rows = [["Proyecto","Fecha","Duración (min)","Horas","Tipo","Nota","Ingreso estimado (S/.)"]];
+  ms.forEach(s => {
+    const proj = getProject(s.projectId);
+    const mins = Math.round(s.duration / 60);
+    const hrs  = (s.duration / 3600).toFixed(2);
+    const earn = proj?.rate > 0 ? ((s.duration / 3600) * proj.rate).toFixed(2) : "";
+    rows.push([
+      proj?.name || "Proyecto eliminado",
+      s.date, mins, hrs,
+      s.type === "manual" ? "manual" : "timer",
+      s.note || "",
+      earn
+    ]);
+  });
+
+  // Totals row
+  const totalMins = ms.reduce((a, s) => a + Math.round(s.duration / 60), 0);
+  const totalHrs  = (ms.reduce((a, s) => a + s.duration, 0) / 3600).toFixed(2);
+  const totalEarn = ms.reduce((a, s) => {
+    const p = getProject(s.projectId);
+    return a + (p?.rate > 0 ? (s.duration / 3600) * p.rate : 0);
+  }, 0).toFixed(2);
+  rows.push(["TOTAL", "", totalMins, totalHrs, "", "", totalEarn]);
+
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = "kronos_" + dashMonth + ".csv"; a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ── Exportar PDF ──────────────────────────────────────────────────────────────
+document.getElementById("btn-export-pdf").addEventListener("click", () => {
+  const ms = sessions.filter(s => monthOf(s.date) === dashMonth);
+  if (ms.length === 0) { alert("Sin sesiones en " + fmtMonthLabel(dashMonth)); return; }
+
+  if (typeof window.jspdf === "undefined") {
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    script.onload = () => generatePDF(ms);
+    document.head.appendChild(script);
+  } else {
+    generatePDF(ms);
+  }
+});
+
+function generatePDF(ms) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = 210, margin = 18;
+  let y = 22;
+
+  // ── Header ──
+  doc.setFillColor(18, 20, 42);
+  doc.rect(0, 0, W, 38, "F");
+  doc.setTextColor(199, 146, 234);
+  doc.setFontSize(22); doc.setFont("helvetica", "bold");
+  doc.text("KRONOS", margin, y); y += 7;
+  doc.setFontSize(9); doc.setFont("helvetica", "normal");
+  doc.setTextColor(138, 138, 184);
+  doc.text("TIME TRACKER", margin, y); y += 5;
+  doc.setTextColor(240, 240, 255);
+  doc.setFontSize(10);
+  doc.text("Reporte — " + fmtMonthLabel(dashMonth), margin, y);
+  doc.text("Generado: " + todayStr(), W - margin, y, { align: "right" });
+  y = 48;
+
+  // ── Summary cards ──
+  const totalSec  = ms.reduce((a, s) => a + s.duration, 0);
+  const totalEarn = ms.reduce((a, s) => {
+    const p = getProject(s.projectId); return a + (p?.rate > 0 ? (s.duration / 3600) * p.rate : 0);
+  }, 0);
+  const cardW = (W - margin * 2 - 8) / 2;
+
+  [[fmtH(totalSec), "HORAS DEL MES"], ["S/. " + totalEarn.toFixed(2), "INGRESOS EST."]].forEach((item, i) => {
+    const x = margin + i * (cardW + 8);
+    doc.setFillColor(26, 29, 58);
+    doc.roundedRect(x, y, cardW, 22, 3, 3, "F");
+    doc.setTextColor(138, 138, 184); doc.setFontSize(8);
+    doc.text(item[1], x + cardW / 2, y + 7, { align: "center" });
+    doc.setTextColor(199, 146, 234); doc.setFontSize(16); doc.setFont("helvetica", "bold");
+    doc.text(item[0], x + cardW / 2, y + 17, { align: "center" });
+  });
+  y += 30;
+
+  // ── By project summary ──
+  const projIds = [...new Set(ms.map(s => s.projectId))];
+  doc.setFontSize(9); doc.setFont("helvetica", "bold");
+  doc.setTextColor(138, 138, 184);
+  doc.text("RESUMEN POR PROYECTO", margin, y); y += 6;
+
+  projIds.forEach(pid => {
+    const proj   = getProject(pid);
+    const pSecs  = ms.filter(s => s.projectId === pid).reduce((a, s) => a + s.duration, 0);
+    const pEarn  = proj?.rate > 0 ? (pSecs / 3600) * proj.rate : 0;
+    const color  = proj?.color || "#c792ea";
+    const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
+    doc.setFillColor(r, g, b);
+    doc.circle(margin + 2, y - 1.5, 2, "F");
+    doc.setTextColor(240, 240, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text(proj?.name || "Proyecto eliminado", margin + 6, y);
+    doc.text(fmtH(pSecs) + (pEarn > 0 ? "  ·  S/. " + pEarn.toFixed(2) : ""), W - margin, y, { align: "right" });
+    y += 7;
+  });
+  y += 4;
+
+  // ── Sessions table ──
+  doc.setFillColor(26, 29, 58);
+  doc.rect(margin, y, W - margin * 2, 7, "F");
+  doc.setTextColor(138, 138, 184); doc.setFontSize(8); doc.setFont("helvetica", "bold");
+  const cols = [margin+2, margin+46, margin+70, margin+90, margin+118];
+  ["PROYECTO","FECHA","DURACIÓN","TIPO","NOTA"].forEach((h, i) => doc.text(h, cols[i], y + 4.5));
+  y += 9;
+
+  ms.forEach((s, idx) => {
+    if (y > 265) { doc.addPage(); y = 20; }
+    const proj = getProject(s.projectId);
+    if (idx % 2 === 0) { doc.setFillColor(22, 24, 48); doc.rect(margin, y - 0.5, W - margin * 2, 6.5, "F"); }
+    doc.setTextColor(240, 240, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
+    const note = s.note ? (s.note.length > 28 ? s.note.slice(0, 28) + "…" : s.note) : "—";
+    doc.text(proj?.name || "Eliminado", cols[0], y + 4);
+    doc.text(s.date, cols[1], y + 4);
+    doc.text(fmtH(s.duration), cols[2], y + 4);
+    doc.text(s.type === "manual" ? "manual" : "timer", cols[3], y + 4);
+    doc.text(note, cols[4], y + 4);
+    y += 6.5;
+  });
+  y += 6;
+
+  // ── Totals row ──
+  doc.setFillColor(199, 146, 234, 30);
+  doc.setDrawColor(199, 146, 234);
+  doc.rect(margin, y, W - margin * 2, 8, "FD");
+  doc.setTextColor(199, 146, 234); doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+  doc.text("TOTAL", cols[0], y + 5.5);
+  doc.text(fmtH(totalSec), cols[2], y + 5.5);
+  if (totalEarn > 0) doc.text("S/. " + totalEarn.toFixed(2), W - margin - 2, y + 5.5, { align: "right" });
+  y += 14;
+
+  // ── Footer ──
+  doc.setTextColor(80, 80, 100); doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
+  doc.text("Generado por Kronos Time Tracker · " + todayStr(), W / 2, 287, { align: "center" });
+
+  doc.save("kronos_" + dashMonth + ".pdf");
+}
 </script>
 </body>
 </html>
+
 
