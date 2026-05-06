@@ -1824,67 +1824,64 @@ function generateFactura(ms, { cliente, ruc, emisor, descripcion, numero }) {
   const W = 210, M = 18;
   let y = 20;
 
-  // Header band
-  doc.setFillColor(18, 20, 42);
-  doc.rect(0, 0, W, 42, "F");
-
-  // Logo
-  doc.setTextColor(199, 146, 234); doc.setFontSize(24); doc.setFont("helvetica","bold");
-  doc.text("KRONOS", M, y + 6); 
-  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(138,138,184);
+  // ── Header ──
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 0, W, 36, "F");
+  doc.setTextColor(255, 255, 255); doc.setFontSize(22); doc.setFont("helvetica","bold");
+  doc.text("KRONOS", M, y + 6);
+  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(180,180,180);
   doc.text("TIME TRACKER", M, y + 13);
-
-  // Factura label
-  doc.setTextColor(166,227,161); doc.setFontSize(18); doc.setFont("helvetica","bold");
+  doc.setTextColor(255,255,255); doc.setFontSize(18); doc.setFont("helvetica","bold");
   doc.text("FACTURA", W - M, y + 6, { align:"right" });
-  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(138,138,184);
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.setTextColor(200,200,200);
   doc.text(numero, W - M, y + 13, { align:"right" });
   doc.text("Fecha: " + todayStr(), W - M, y + 19, { align:"right" });
   doc.text("Período: " + fmtMonthLabel(dashMonth), W - M, y + 25, { align:"right" });
-  y = 52;
+  y = 46;
 
-  // Emisor / Cliente
-  const colW = (W - M * 2 - 10) / 2;
+  // ── Emisor / Cliente boxes ──
+  const colW = (W - M * 2 - 8) / 2;
   [["DE:", emisor], ["PARA:", cliente + (ruc ? "\n" + ruc : "")]].forEach((item, i) => {
-    const x = M + i * (colW + 10);
-    doc.setFillColor(26, 29, 58); doc.roundedRect(x, y, colW, 22, 2, 2, "F");
-    doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","bold");
-    doc.text(item[0], x + 8, y + 7);
-    doc.setTextColor(240,240,255); doc.setFontSize(10); doc.setFont("helvetica","normal");
-    const lines = item[1].split("\n");
-    lines.forEach((l, li) => doc.text(l, x + 8, y + 14 + li * 5));
+    const x = M + i * (colW + 8);
+    doc.setDrawColor(180,180,180); doc.setFillColor(248,248,248);
+    doc.roundedRect(x, y, colW, 22, 2, 2, "FD");
+    doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont("helvetica","bold");
+    doc.text(item[0], x + 6, y + 7);
+    doc.setTextColor(20,20,20); doc.setFontSize(10); doc.setFont("helvetica","normal");
+    item[1].split("\n").forEach((l, li) => doc.text(l, x + 6, y + 14 + li * 5));
   });
-  y += 30;
+  y += 28;
 
-  // Description
-  doc.setFillColor(26, 29, 58); doc.roundedRect(M, y, W - M * 2, 12, 2, 2, "F");
-  doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","bold");
-  doc.text("DESCRIPCIÓN DEL SERVICIO", M + 6, y + 5);
-  doc.setTextColor(240,240,255); doc.setFont("helvetica","normal"); doc.setFontSize(10);
-  doc.text(descripcion, M + 6, y + 10);
-  y += 18;
+  // ── Description ──
+  doc.setDrawColor(180,180,180); doc.setFillColor(248,248,248);
+  doc.roundedRect(M, y, W - M * 2, 14, 2, 2, "FD");
+  doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont("helvetica","bold");
+  doc.text("DESCRIPCIÓN DEL SERVICIO", M + 6, y + 6);
+  doc.setTextColor(20,20,20); doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  doc.text(descripcion, M + 6, y + 11.5);
+  y += 20;
 
-  // Table header
-  doc.setFillColor(199,146,234,40); doc.rect(M, y, W - M * 2, 7, "F");
-  doc.setTextColor(199,146,234); doc.setFontSize(8); doc.setFont("helvetica","bold");
-  const cols = [M+3, M+50, M+90, M+125, M+155];
-  ["PROYECTO","FECHA","DURACIÓN","TARIFA","SUBTOTAL"].forEach((h,i) => doc.text(h, cols[i], y+4.8));
+  // ── Table header ──
+  doc.setFillColor(30,30,30); doc.rect(M, y, W - M * 2, 7, "F");
+  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont("helvetica","bold");
+  const cols = [M+3, M+52, M+90, M+122, M+155];
+  ["PROYECTO","SESIONES","DURACIÓN","TARIFA","SUBTOTAL"].forEach((h,i) => doc.text(h, cols[i], y+4.8));
   y += 9;
 
-  // By project summary lines
+  // ── Rows ──
   const projIds = [...new Set(ms.map(s => s.projectId))];
   let grandTotal = 0;
   projIds.forEach((pid, idx) => {
-    if (y > 245) { doc.addPage(); y = 20; }
-    const proj  = getProject(pid);
-    const pSecs = ms.filter(s => s.projectId === pid).reduce((a,s) => a + s.duration, 0);
-    const rate  = proj?.rate || 0;
+    if (y > 248) { doc.addPage(); y = 20; }
+    const proj     = getProject(pid);
+    const pSecs    = ms.filter(s => s.projectId === pid).reduce((a,s) => a + s.duration, 0);
+    const rate     = proj?.rate || 0;
     const subtotal = (pSecs / 3600) * rate;
-    grandTotal += subtotal;
-    if (idx % 2 === 0) { doc.setFillColor(22,24,48); doc.rect(M, y-0.5, W-M*2, 7, "F"); }
-    doc.setTextColor(240,240,255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    grandTotal    += subtotal;
+    if (idx % 2 === 0) { doc.setFillColor(245,245,245); doc.rect(M, y-0.5, W-M*2, 7, "F"); }
+    doc.setTextColor(20,20,20); doc.setFont("helvetica","normal"); doc.setFontSize(9);
     doc.text(proj?.name || "Proyecto eliminado", cols[0], y+4);
-    doc.text(ms.filter(s=>s.projectId===pid).length+" sesiones", cols[1], y+4);
+    doc.text(ms.filter(s=>s.projectId===pid).length+" ses.", cols[1], y+4);
     doc.text(fmtH(pSecs), cols[2], y+4);
     doc.text(rate > 0 ? "S/. "+rate+"/hr" : "—", cols[3], y+4);
     doc.text(subtotal > 0 ? "S/. "+subtotal.toFixed(2) : "—", cols[4], y+4);
@@ -1892,23 +1889,23 @@ function generateFactura(ms, { cliente, ruc, emisor, descripcion, numero }) {
   });
   y += 6;
 
-  // Total box
-  doc.setFillColor(166,227,161,30); doc.setDrawColor(166,227,161);
-  doc.roundedRect(W - M - 70, y, 70, 18, 3, 3, "FD");
-  doc.setTextColor(138,138,184); doc.setFontSize(9); doc.setFont("helvetica","bold");
-  doc.text("TOTAL A COBRAR", W - M - 35, y + 6, { align:"center" });
-  doc.setTextColor(166,227,161); doc.setFontSize(16);
-  doc.text("S/. " + grandTotal.toFixed(2), W - M - 35, y + 14, { align:"center" });
-  y += 28;
+  // ── Total box ──
+  doc.setDrawColor(30,30,30); doc.setFillColor(30,30,30);
+  doc.roundedRect(W - M - 72, y, 72, 18, 2, 2, "FD");
+  doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.text("TOTAL A COBRAR", W - M - 36, y + 6, { align:"center" });
+  doc.setTextColor(255,255,255); doc.setFontSize(15);
+  doc.text("S/. " + grandTotal.toFixed(2), W - M - 36, y + 14, { align:"center" });
+  y += 26;
 
-  // Payment note
-  doc.setFillColor(26,29,58); doc.roundedRect(M, y, W-M*2, 12, 2, 2, "F");
-  doc.setTextColor(138,138,184); doc.setFontSize(8); doc.setFont("helvetica","normal");
-  doc.text("Este documento fue generado automáticamente por Kronos Time Tracker · " + todayStr(), M+6, y+7);
+  // ── Note ──
+  doc.setTextColor(130,130,130); doc.setFontSize(7.5); doc.setFont("helvetica","normal");
+  doc.text("Documento generado automáticamente por Kronos Time Tracker.", M, y);
 
-  // Footer
-  doc.setTextColor(60,60,80); doc.setFontSize(7);
-  doc.text("Kronos Time Tracker · rraygada2.github.io/Kronos", W/2, 287, { align:"center" });
+  // ── Footer line ──
+  doc.setDrawColor(200,200,200); doc.line(M, 283, W - M, 283);
+  doc.setTextColor(150,150,150); doc.setFontSize(7);
+  doc.text("Kronos Time Tracker · " + todayStr(), W/2, 288, { align:"center" });
 
   doc.save("factura_" + numero.replace(/\//g,"-") + "_" + dashMonth + ".pdf");
 }
@@ -1974,76 +1971,69 @@ document.getElementById("btn-export-pdf").addEventListener("click", () => {
 function generatePDF(ms) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const W = 210, margin = 18;
-  let y = 22;
+  const W = 210, M = 18;
+  let y = 20;
 
   // ── Header ──
-  doc.setFillColor(18, 20, 42);
-  doc.rect(0, 0, W, 38, "F");
-  doc.setTextColor(199, 146, 234);
-  doc.setFontSize(22); doc.setFont("helvetica", "bold");
-  doc.text("KRONOS", margin, y); y += 7;
-  doc.setFontSize(9); doc.setFont("helvetica", "normal");
-  doc.setTextColor(138, 138, 184);
-  doc.text("TIME TRACKER", margin, y); y += 5;
-  doc.setTextColor(240, 240, 255);
-  doc.setFontSize(10);
-  doc.text("Reporte — " + fmtMonthLabel(dashMonth), margin, y);
-  doc.text("Generado: " + todayStr(), W - margin, y, { align: "right" });
-  y = 48;
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 0, W, 32, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20); doc.setFont("helvetica", "bold");
+  doc.text("KRONOS", M, y + 5);
+  doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(180, 180, 180);
+  doc.text("TIME TRACKER", M, y + 11);
+  doc.setTextColor(220, 220, 220); doc.setFontSize(10);
+  doc.text("Reporte de tiempo — " + fmtMonthLabel(dashMonth), M, y + 19);
+  doc.text("Generado: " + todayStr(), W - M, y + 19, { align: "right" });
+  y = 42;
 
-  // ── Summary cards ──
+  // ── Summary boxes ──
   const totalSec  = ms.reduce((a, s) => a + s.duration, 0);
   const totalEarn = ms.reduce((a, s) => {
     const p = getProject(s.projectId); return a + (p?.rate > 0 ? (s.duration / 3600) * p.rate : 0);
   }, 0);
-  const cardW = (W - margin * 2 - 8) / 2;
-
+  const cardW = (W - M * 2 - 8) / 2;
   [[fmtH(totalSec), "HORAS DEL MES"], ["S/. " + totalEarn.toFixed(2), "INGRESOS EST."]].forEach((item, i) => {
-    const x = margin + i * (cardW + 8);
-    doc.setFillColor(26, 29, 58);
-    doc.roundedRect(x, y, cardW, 22, 3, 3, "F");
-    doc.setTextColor(138, 138, 184); doc.setFontSize(8);
+    const x = M + i * (cardW + 8);
+    doc.setDrawColor(180, 180, 180); doc.setFillColor(248, 248, 248);
+    doc.roundedRect(x, y, cardW, 20, 2, 2, "FD");
+    doc.setTextColor(100, 100, 100); doc.setFontSize(7); doc.setFont("helvetica", "normal");
     doc.text(item[1], x + cardW / 2, y + 7, { align: "center" });
-    doc.setTextColor(199, 146, 234); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-    doc.text(item[0], x + cardW / 2, y + 17, { align: "center" });
+    doc.setTextColor(20, 20, 20); doc.setFontSize(15); doc.setFont("helvetica", "bold");
+    doc.text(item[0], x + cardW / 2, y + 16, { align: "center" });
   });
-  y += 30;
+  y += 28;
 
   // ── By project summary ──
-  const projIds = [...new Set(ms.map(s => s.projectId))];
-  doc.setFontSize(9); doc.setFont("helvetica", "bold");
-  doc.setTextColor(138, 138, 184);
-  doc.text("RESUMEN POR PROYECTO", margin, y); y += 6;
+  doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(80, 80, 80);
+  doc.text("RESUMEN POR PROYECTO", M, y); y += 5;
+  doc.setDrawColor(220, 220, 220); doc.line(M, y, W - M, y); y += 4;
 
+  const projIds = [...new Set(ms.map(s => s.projectId))];
   projIds.forEach(pid => {
-    const proj   = getProject(pid);
-    const pSecs  = ms.filter(s => s.projectId === pid).reduce((a, s) => a + s.duration, 0);
-    const pEarn  = proj?.rate > 0 ? (pSecs / 3600) * proj.rate : 0;
-    const color  = proj?.color || "#c792ea";
-    const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
-    doc.setFillColor(r, g, b);
-    doc.circle(margin + 2, y - 1.5, 2, "F");
-    doc.setTextColor(240, 240, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-    doc.text(proj?.name || "Proyecto eliminado", margin + 6, y);
-    doc.text(fmtH(pSecs) + (pEarn > 0 ? "  ·  S/. " + pEarn.toFixed(2) : ""), W - margin, y, { align: "right" });
+    const proj  = getProject(pid);
+    const pSecs = ms.filter(s => s.projectId === pid).reduce((a, s) => a + s.duration, 0);
+    const pEarn = proj?.rate > 0 ? (pSecs / 3600) * proj.rate : 0;
+    doc.setTextColor(20, 20, 20); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text("• " + (proj?.name || "Proyecto eliminado"), M + 2, y + 3);
+    doc.text(fmtH(pSecs) + (pEarn > 0 ? "  ·  S/. " + pEarn.toFixed(2) : ""), W - M, y + 3, { align: "right" });
     y += 7;
   });
   y += 4;
 
-  // ── Sessions table ──
-  doc.setFillColor(26, 29, 58);
-  doc.rect(margin, y, W - margin * 2, 7, "F");
-  doc.setTextColor(138, 138, 184); doc.setFontSize(8); doc.setFont("helvetica", "bold");
-  const cols = [margin+2, margin+46, margin+70, margin+90, margin+118];
-  ["PROYECTO","FECHA","DURACIÓN","TIPO","NOTA"].forEach((h, i) => doc.text(h, cols[i], y + 4.5));
+  // ── Sessions table header ──
+  doc.setFillColor(30, 30, 30);
+  doc.rect(M, y, W - M * 2, 7, "F");
+  doc.setTextColor(255, 255, 255); doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
+  const cols = [M+2, M+48, M+72, M+92, M+118];
+  ["PROYECTO","FECHA","DURACIÓN","TIPO","NOTA"].forEach((h, i) => doc.text(h, cols[i], y + 4.8));
   y += 9;
 
   ms.forEach((s, idx) => {
     if (y > 265) { doc.addPage(); y = 20; }
     const proj = getProject(s.projectId);
-    if (idx % 2 === 0) { doc.setFillColor(22, 24, 48); doc.rect(margin, y - 0.5, W - margin * 2, 6.5, "F"); }
-    doc.setTextColor(240, 240, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
+    if (idx % 2 === 0) { doc.setFillColor(245, 245, 245); doc.rect(M, y - 0.5, W - M * 2, 6.5, "F"); }
+    doc.setTextColor(20, 20, 20); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
     const note = s.note ? (s.note.length > 28 ? s.note.slice(0, 28) + "…" : s.note) : "—";
     doc.text(proj?.name || "Eliminado", cols[0], y + 4);
     doc.text(s.date, cols[1], y + 4);
@@ -2052,21 +2042,21 @@ function generatePDF(ms) {
     doc.text(note, cols[4], y + 4);
     y += 6.5;
   });
-  y += 6;
+  y += 5;
 
   // ── Totals row ──
-  doc.setFillColor(199, 146, 234, 30);
-  doc.setDrawColor(199, 146, 234);
-  doc.rect(margin, y, W - margin * 2, 8, "FD");
-  doc.setTextColor(199, 146, 234); doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+  doc.setDrawColor(30, 30, 30); doc.setFillColor(30, 30, 30);
+  doc.rect(M, y, W - M * 2, 8, "FD");
+  doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text("TOTAL", cols[0], y + 5.5);
   doc.text(fmtH(totalSec), cols[2], y + 5.5);
-  if (totalEarn > 0) doc.text("S/. " + totalEarn.toFixed(2), W - margin - 2, y + 5.5, { align: "right" });
+  if (totalEarn > 0) doc.text("S/. " + totalEarn.toFixed(2), W - M - 2, y + 5.5, { align: "right" });
   y += 14;
 
   // ── Footer ──
-  doc.setTextColor(80, 80, 100); doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
-  doc.text("Generado por Kronos Time Tracker · " + todayStr(), W / 2, 287, { align: "center" });
+  doc.setDrawColor(200, 200, 200); doc.line(M, 283, W - M, 283);
+  doc.setTextColor(150, 150, 150); doc.setFontSize(7); doc.setFont("helvetica", "normal");
+  doc.text("Generado por Kronos Time Tracker · " + todayStr(), W / 2, 288, { align: "center" });
 
   doc.save("kronos_" + dashMonth + ".pdf");
 }
