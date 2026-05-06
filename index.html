@@ -186,6 +186,16 @@
   body.compact .tarea-sub-text { font-size:11px; }
   body.compact .session-item { padding:9px 12px; }
   body.compact .proj-stat { padding:12px; }
+
+  /* Archived */
+  .proj-item.archived-item { opacity:0.55; background:transparent; border-style:dashed; }
+  .proj-item.archived-item:hover { opacity:0.8; }
+  .btn-proj-action.archive { width:auto !important; padding:0 8px; }
+  .btn-proj-action.archive:hover { border-color:#ffd700; color:#ffd700; }
+
+  /* Reminder day buttons */
+  .day-btn { background:transparent; border:1px solid var(--border); border-radius:6px; padding:5px 10px; color:var(--muted); font-size:11px; cursor:pointer; font-family:'DM Mono',monospace; transition:all 0.15s; }
+  .day-btn.active { background:var(--accent)22; border-color:var(--accent); color:var(--accent); }
   #panel-tareas { max-width:600px; }
   .tarea-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--card); margin-bottom:7px; transition:opacity 0.2s,background 0.15s; }
   .tarea-item:hover { background:#16162e; }
@@ -233,7 +243,8 @@
 
 <div id="header">
   <div><div id="logo">Kronos</div><div id="logo-sub">TIME TRACKER</div></div>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="btn-reminder" title="Recordatorio de timer" style="background:transparent;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">🔔</button>
     <button id="btn-compact" title="Modo compacto" style="background:transparent;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">⊟</button>
     <div id="active-badge">
       <div id="active-dot"></div>
@@ -311,6 +322,11 @@
     </div>
     <div id="projects-list"></div>
     <button class="btn-add-proj" id="btn-new-proj">+ Nuevo proyecto</button>
+    <!-- Proyectos archivados -->
+    <div id="archived-section" style="display:none;margin-top:20px;background:#1a1d3a;border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <button id="btn-toggle-archived" style="background:transparent;border:none;color:#8a8ab8;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:1.5px;width:100%;text-align:left;padding:0;transition:color 0.15s;display:flex;align-items:center;gap:6px">▸ ARCHIVADOS <span id="archived-count" style="background:#252850;padding:1px 7px;border-radius:10px;font-size:10px"></span></button>
+      <div id="archived-list" style="display:none;margin-top:10px"></div>
+    </div>
   </div>
 
   <!-- DASHBOARD -->
@@ -466,9 +482,26 @@
         </div>
       </div>
       <div class="field">
-        <label>TARIFA S/. / HORA <span style="color:var(--muted);font-weight:300">(opcional)</span></label>
-        <div class="unit-wrap"><input type="number" id="proj-rate" placeholder="0.00" min="0" step="0.5"><span class="unit">S/.</span></div>
+        <label>TARIFA <span style="color:var(--muted);font-weight:300">(opcional)</span></label>
+        <div style="display:flex;gap:8px">
+          <div class="unit-wrap" style="flex:1"><input type="number" id="proj-rate" placeholder="0.00" min="0" step="0.5"><span class="unit" id="proj-rate-unit">S/.</span></div>
+          <select id="proj-currency" style="width:90px;flex-shrink:0">
+            <option value="PEN">S/. PEN</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+          </select>
+        </div>
         <span style="font-size:11px;color:var(--muted)">También puedes configurarlo en el Dashboard</span>
+      </div>
+      <div class="field">
+        <label>REDONDEO DE SESIONES</label>
+        <select id="proj-rounding">
+          <option value="0">Sin redondeo</option>
+          <option value="15">Bloques de 15 min</option>
+          <option value="30">Bloques de 30 min</option>
+          <option value="60">Bloques de 1 hora</option>
+        </select>
+        <span style="font-size:11px;color:var(--muted)">Aplica al calcular horas en reportes y facturas</span>
       </div>
       <div class="field">
         <label>IMAGEN <span style="color:var(--muted);font-weight:300">(opcional)</span></label>
@@ -491,6 +524,54 @@
       <div class="row" style="margin-top:4px">
         <button class="btn btn-ghost" id="btn-proj-cancel">Cancelar</button>
         <button class="btn btn-primary" id="btn-proj-save">Crear proyecto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Recordatorio de timer -->
+<div id="modal-reminder" class="modal-overlay">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-title">🔔 Recordatorio de timer</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#0e1020;border-radius:8px;border:1px solid var(--border)">
+        <span style="font-size:13px">Activar recordatorio</span>
+        <button id="reminder-toggle" style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:all 0.2s;position:relative;font-size:0">toggle</button>
+      </div>
+      <div id="reminder-settings" style="display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>AVISAR SI LLEVO MÁS DE</label>
+          <select id="reminder-hours">
+            <option value="1">1 hora sin registrar</option>
+            <option value="2" selected>2 horas sin registrar</option>
+            <option value="3">3 horas sin registrar</option>
+            <option value="4">4 horas sin registrar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>HORARIO LABORAL</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="reminder-start" value="9" min="0" max="23" style="width:70px"> <span style="color:var(--muted);font-size:12px">h — </span>
+            <input type="number" id="reminder-end" value="19" min="0" max="23" style="width:70px"> <span style="color:var(--muted);font-size:12px">h</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>DÍAS</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="reminder-days">
+            <button class="day-btn active" data-day="1">Lun</button>
+            <button class="day-btn active" data-day="2">Mar</button>
+            <button class="day-btn active" data-day="3">Mié</button>
+            <button class="day-btn active" data-day="4">Jue</button>
+            <button class="day-btn active" data-day="5">Vie</button>
+            <button class="day-btn" data-day="6">Sáb</button>
+            <button class="day-btn" data-day="0">Dom</button>
+          </div>
+        </div>
+        <div id="reminder-notif-status" style="font-size:11px;color:var(--muted);padding:8px 12px;background:#0e1020;border-radius:6px;border:1px solid var(--border)"></div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn btn-ghost" id="btn-reminder-cancel">Cerrar</button>
+        <button class="btn btn-primary" id="btn-reminder-save">Guardar</button>
       </div>
     </div>
   </div>
@@ -591,12 +672,31 @@ let elapsed       = 0;
 let startTs       = null;
 let interval      = null;
 let histFilter    = "all";
+let histSearch    = "";
 let pendingDelProj    = null;
 let pendingDelSession = null;
 let quickOpen     = false;
 let dashMonth     = currentMonth();
-let editingProjId = null;   // null = nuevo, string = editando
+let editingProjId = null;
 let pendingImgB64 = null;
+// Tareas
+let tasks            = LS.get("kron_tasks") || [];
+let tareasProj       = null;
+let editingTareaId   = null;
+let pendingDelTarea  = null;
+let selectedPrio     = "urgente";
+const celebratedSet  = new Set();
+// Reminder
+let reminderCfg      = LS.get("kron_reminder") || { enabled:false, hours:2, start:9, end:19, days:[1,2,3,4,5] };
+let reminderInterval = null;
+let lastReminderSent = 0;
+// Edit note
+let editingNoteId    = null;
+// Compact
+let compactMode      = LS.get("kron_compact") || false;
+// Celebration
+let celebrationTimeout = null;
+let confettiInterval   = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(s) {
@@ -610,8 +710,14 @@ function fmtH(s) {
   if (m===0) return h+"h";
   return h+"h "+m+"min";
 }
-function todayStr()     { return new Date().toISOString().slice(0,10); }
+function currSymbol(c) { return c==="USD"?"$":c==="EUR"?"€":"S/."; }
+function roundSecs(secs, blockMins) {
+  if (!blockMins) return secs;
+  const block = blockMins * 60;
+  return Math.ceil(secs / block) * block;
+}
 function currentMonth() { return new Date().toISOString().slice(0,7); }
+function todayStr()     { return new Date().toISOString().slice(0,10); }
 function monthOf(d)     { return d ? d.slice(0,7) : null; }
 function fmtMonthLabel(ym) {
   const p=ym.split("-");
@@ -784,10 +890,12 @@ function renderTimerPanel() {
     list.innerHTML='<div class="welcome-box"><div class="welcome-icon">⏱</div><div class="welcome-title">Bienvenido a Kronos</div><div class="welcome-steps"><span style="color:var(--accent)">1.</span> Clic en <strong style="color:var(--text)">+ Nuevo proyecto</strong> aquí abajo<br><span style="color:var(--accent)">2.</span> Dale un nombre y elige un color<br><span style="color:var(--accent)">3.</span> Agrega tu tarifa S/./hr <span style="color:var(--muted)">(opcional)</span><br><span style="color:var(--accent)">4.</span> Pulsa el proyecto para iniciar el timer</div></div>';
     populateQMSelect(); return;
   }
-  projects.forEach(p=>{
+  projects.filter(p => !p.archived).forEach(p=>{
     const isActive=active?.projectId===p.id;
     const mSecs=monthSecs(p.id);
-    const mEarned=p.rate>0?(mSecs/3600)*p.rate:0;
+    const mRounded=roundSecs(mSecs, p.rounding||0);
+    const sym=currSymbol(p.currency||"PEN");
+    const mEarned=p.rate>0?(mRounded/3600)*p.rate:0;
     const row=document.createElement("div"); row.className="proj-row";
     const btn=document.createElement("button"); btn.className="proj-item";
     if (active&&!isActive) btn.setAttribute("disabled","");
@@ -798,21 +906,27 @@ function renderTimerPanel() {
       '<div style="flex:1;min-width:0;margin-left:2px">'+
         '<div class="proj-name">'+p.name+'</div>'+
         '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:3px">'+
-          (p.rate>0?'<span class="proj-meta">S/. '+p.rate+'/hr</span>':'')+
-          (mSecs>0?'<span class="proj-month" style="color:'+p.color+';opacity:0.9">'+fmtH(mSecs)+(mEarned>0?' · S/. '+mEarned.toFixed(2):'')+' este mes</span>':'')+
+          (p.rate>0?'<span class="proj-meta">'+sym+' '+p.rate+'/hr</span>':'')+
+          (mSecs>0?'<span class="proj-month" style="color:'+p.color+';opacity:0.9">'+fmtH(mRounded)+(mEarned>0?' · '+sym+' '+mEarned.toFixed(2):'')+' este mes</span>':'')+
         '</div>'+
       '</div>'+
       (isActive?'<span class="proj-running" style="color:'+p.color+'">● en curso</span>':(!active?'<span class="proj-hint">▶ iniciar</span>':""));
     if (!active) btn.addEventListener("click",()=>startTimer(p.id));
 
-    // Botones editar / eliminar
+    // Botones editar / archivar / eliminar
     const actions=document.createElement("div"); actions.className="proj-actions";
     if (!active) {
       const editBtn=document.createElement("button"); editBtn.className="btn-proj-action"; editBtn.title="Editar"; editBtn.innerHTML="✎";
       editBtn.addEventListener("click",e=>{e.stopPropagation();openProjModal(p.id);});
+      const archBtn=document.createElement("button");
+      archBtn.className="btn-proj-action archive";
+      archBtn.title="Archivar proyecto — desaparece del Timer pero conserva su historial";
+      archBtn.innerHTML='<span style="font-size:10px;letter-spacing:0.5px">archivar</span>';
+      archBtn.style.cssText="width:auto;padding:0 8px;font-size:10px;";
+      archBtn.addEventListener("click",e=>{e.stopPropagation();archiveProject(p.id);});
       const delBtn=document.createElement("button"); delBtn.className="btn-proj-action del"; delBtn.title="Eliminar"; delBtn.textContent="✕";
       delBtn.addEventListener("click",e=>{e.stopPropagation();openDelProjModal(p.id,p.name);});
-      actions.appendChild(editBtn); actions.appendChild(delBtn);
+      actions.appendChild(delBtn); actions.appendChild(editBtn); actions.appendChild(archBtn);
     }
     row.appendChild(btn); row.appendChild(actions); list.appendChild(row);
 
@@ -831,6 +945,38 @@ function renderTimerPanel() {
       list.appendChild(notesWrap);
     }
   });
+
+  // ── Archived projects section ──
+  const archived = projects.filter(p => p.archived);
+  const archSection = document.getElementById("archived-section");
+  const archList    = document.getElementById("archived-list");
+  const archCount   = document.getElementById("archived-count");
+  if (archived.length > 0) {
+    archSection.style.display = "block";
+    archCount.textContent = "("+archived.length+")";
+    archList.innerHTML = "";
+    archived.forEach(p => {
+      const row2 = document.createElement("div"); row2.className = "proj-row";
+      const btn2 = document.createElement("button"); btn2.className = "proj-item archived-item";
+      btn2.disabled = true;
+      btn2.innerHTML = avatarHTML(p,32) +
+        '<div style="flex:1;min-width:0;margin-left:2px"><div class="proj-name" style="font-size:13px">'+p.name+'</div></div>'+
+        '<span style="font-size:10px;color:#8a8ab8;letter-spacing:1px;background:#252850;padding:2px 8px;border-radius:6px">archivado</span>';
+      const acts2 = document.createElement("div"); acts2.className = "proj-actions";
+      const unarchBtn = document.createElement("button"); unarchBtn.className="btn-proj-action";
+      unarchBtn.title="Restaurar proyecto al Timer";
+      unarchBtn.innerHTML='<span style="font-size:10px;letter-spacing:0.5px">restaurar</span>';
+      unarchBtn.style.cssText="width:auto;padding:0 8px;font-size:10px;color:#a6e3a1;border-color:#a6e3a144;";
+      unarchBtn.addEventListener("click",()=>unarchiveProject(p.id));
+      const delBtn2 = document.createElement("button"); delBtn2.className="btn-proj-action del"; delBtn2.title="Eliminar"; delBtn2.textContent="✕";
+      delBtn2.addEventListener("click",e=>{e.stopPropagation();openDelProjModal(p.id,p.name);});
+      acts2.appendChild(unarchBtn); acts2.appendChild(delBtn2);
+      row2.appendChild(btn2); row2.appendChild(acts2); archList.appendChild(row2);
+    });
+  } else {
+    archSection.style.display = "none";
+  }
+
   populateQMSelect();
 }
 
@@ -842,6 +988,23 @@ function populateQMSelect() {
   sel.innerHTML+='<option value="__new__">+ Nuevo proyecto...</option>';
   if (prev&&prev!=="__new__") sel.value=prev;
 }
+
+function archiveProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (p) { p.archived = true; saveProjects(); renderTimerPanel(); }
+}
+function unarchiveProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (p) { p.archived = false; saveProjects(); renderTimerPanel(); }
+}
+
+document.getElementById("btn-toggle-archived").addEventListener("click", () => {
+  const list = document.getElementById("archived-list");
+  const btn  = document.getElementById("btn-toggle-archived");
+  const open = list.style.display === "none";
+  list.style.display = open ? "block" : "none";
+  btn.firstChild.textContent = open ? "▾ ARCHIVADOS " : "▸ ARCHIVADOS ";
+});
 
 // ── Quick manual ──────────────────────────────────────────────────────────────
 document.getElementById("btn-toggle-manual").addEventListener("click",()=>{
@@ -954,6 +1117,8 @@ function openProjModal(id=null) {
     const p=getProject(id);
     document.getElementById("proj-name").value=p.name;
     document.getElementById("proj-rate").value=p.rate||"";
+    document.getElementById("proj-currency").value=p.currency||"PEN";
+    document.getElementById("proj-rounding").value=p.rounding||"0";
     document.getElementById("proj-color").value=p.color;
     document.getElementById("proj-color-preview").style.background=p.color;
     document.getElementById("proj-color-hex").textContent=p.color;
@@ -971,6 +1136,8 @@ function openProjModal(id=null) {
   } else {
     document.getElementById("proj-name").value="";
     document.getElementById("proj-rate").value="";
+    document.getElementById("proj-currency").value="PEN";
+    document.getElementById("proj-rounding").value="0";
     document.getElementById("proj-notes").value="";
     document.getElementById("proj-color").value="#c792ea";
     document.getElementById("proj-color-preview").style.background="#c792ea";
@@ -998,13 +1165,15 @@ document.getElementById("btn-proj-save").addEventListener("click",()=>{
   const name=document.getElementById("proj-name").value.trim();
   const color=document.getElementById("proj-color").value;
   const rate=parseFloat(document.getElementById("proj-rate").value)||0;
+  const currency=document.getElementById("proj-currency").value||"PEN";
+  const rounding=parseInt(document.getElementById("proj-rounding").value)||0;
   const notes=document.getElementById("proj-notes").value.trim();
   if (!name){document.getElementById("proj-name").focus();return;}
   if (editingProjId) {
     const proj=projects.find(p=>p.id===editingProjId);
-    if (proj){proj.name=name;proj.color=color;proj.rate=rate;proj.img=pendingImgB64||null;proj.notes=notes;}
+    if (proj){proj.name=name;proj.color=color;proj.rate=rate;proj.currency=currency;proj.rounding=rounding;proj.img=pendingImgB64||null;proj.notes=notes;}
   } else {
-    projects.push({id:Date.now().toString(),name,color,rate,img:pendingImgB64||null,notes});
+    projects.push({id:Date.now().toString(),name,color,rate,currency,rounding,img:pendingImgB64||null,notes});
   }
   saveProjects(); closeProjModal(); renderTimerPanel();
 });
@@ -1093,6 +1262,7 @@ document.addEventListener("keydown",e=>{
     document.getElementById("modal-del-session").classList.remove("open");
     document.getElementById("modal-del-tarea").classList.remove("open");
     document.getElementById("modal-edit-note").classList.remove("open");
+    document.getElementById("modal-reminder").classList.remove("open");
     document.getElementById("lightbox").style.display="none";
     hideCelebration();
   }
@@ -1152,9 +1322,11 @@ function renderDashboard() {
 
   const ms=sessions.filter(s=>monthOf(s.date)===dashMonth);
   const totalSec=ms.reduce((a,s)=>a+s.duration,0);
-  const byProj=projects.map(p=>{
+  const byProj=projects.filter(p=>!p.archived).map(p=>{
     const secs=ms.filter(s=>s.projectId===p.id).reduce((a,s)=>a+s.duration,0);
-    return {...p,secs,earnings:(secs/3600)*p.rate};
+    const rounded=roundSecs(secs,p.rounding||0);
+    const sym=currSymbol(p.currency||"PEN");
+    return {...p,secs,rounded,earnings:(rounded/3600)*p.rate,sym};
   });
   const totalEarn=byProj.reduce((a,p)=>a+p.earnings,0);
   document.getElementById("dash-hours").textContent=totalSec>0?fmtH(totalSec):"—";
@@ -1206,8 +1378,8 @@ function renderDashboard() {
       '<div class="proj-stat-top">'+
         '<div class="proj-stat-name">'+avatarHTML(p,24)+p.name+'</div>'+
         '<div class="proj-stat-right">'+
-          '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.secs)+'</div>'+
-          (p.earnings>0?'<div class="proj-stat-earn">S/. '+p.earnings.toFixed(2)+'</div>':'')+
+          '<div class="proj-stat-hours" style="color:'+p.color+'">'+fmtH(p.rounded||p.secs)+'</div>'+
+          (p.earnings>0?'<div class="proj-stat-earn">'+p.sym+' '+p.earnings.toFixed(2)+'</div>':'')+
         '</div>'+
       '</div>'+
       '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
@@ -1319,7 +1491,6 @@ function renderHistoric() {
 }
 
 // ── Historial ─────────────────────────────────────────────────────────────────
-let histSearch = "";
 document.getElementById("hist-search").addEventListener("input", e => {
   histSearch = e.target.value.toLowerCase().trim();
   renderHistorial();
@@ -1381,7 +1552,6 @@ function renderHistorial() {
 }
 
 // ── Edit note modal ───────────────────────────────────────────────────────────
-let editingNoteId = null;
 function openEditNoteModal(id) {
   editingNoteId = id;
   const s = sessions.find(x => x.id === id);
@@ -1409,7 +1579,6 @@ document.getElementById("btn-edit-note-save").addEventListener("click", () => {
 });
 
 // ── Compact mode ──────────────────────────────────────────────────────────────
-let compactMode = LS.get("kron_compact") || false;
 function applyCompact() {
   document.body.classList.toggle("compact", compactMode);
   const btn = document.getElementById("btn-compact");
@@ -1426,15 +1595,9 @@ document.getElementById("btn-compact").addEventListener("click", () => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderTimerPanel();
+initReminder();
 
 // ── TAREAS ────────────────────────────────────────────────────────────────────
-let tasks            = LS.get("kron_tasks") || [];
-let tareasProj       = null;
-let editingTareaId   = null;
-let pendingDelTarea  = null;
-let selectedPrio     = "urgente";
-const celebratedSet  = new Set(); // proyectos que ya recibieron la celebración en esta sesión
-
 function saveTasks() { LS.set("kron_tasks", tasks); }
 
 function populateTareasSelect() {
@@ -1709,9 +1872,6 @@ const CELEBRATION_MSGS = [
   { emoji:"👑", msg:"¡Eres la corona!", sub:"Lista vacía. Tú mandas hoy." },
 ];
 
-let celebrationTimeout = null;
-let confettiInterval   = null;
-
 function showCelebration(projId) {
   const data = CELEBRATION_MSGS[Math.floor(Math.random() * CELEBRATION_MSGS.length)];
   document.getElementById("celebration-emoji").textContent = data.emoji;
@@ -1910,6 +2070,144 @@ function generateFactura(ms, { cliente, ruc, emisor, descripcion, numero }) {
   doc.save("factura_" + numero.replace(/\//g,"-") + "_" + dashMonth + ".pdf");
 }
 
+// ── Recordatorio de timer ─────────────────────────────────────────────────────
+function saveReminderCfg() { LS.set("kron_reminder", reminderCfg); }
+
+function applyReminderBtn() {
+  const btn = document.getElementById("btn-reminder");
+  btn.style.borderColor = reminderCfg.enabled ? "var(--accent)" : "var(--border)";
+  btn.style.color       = reminderCfg.enabled ? "var(--accent)" : "var(--muted)";
+  btn.title = reminderCfg.enabled ? "Recordatorio activo" : "Recordatorio desactivado";
+}
+
+function renderReminderToggle() {
+  const tog = document.getElementById("reminder-toggle");
+  tog.style.background = reminderCfg.enabled ? "var(--accent)" : "var(--border)";
+  tog.style.boxShadow  = reminderCfg.enabled
+    ? "inset 0 0 0 2px var(--accent), inset -20px 0 0 0 #0e1020"
+    : "inset 0 0 0 2px var(--border), inset 20px 0 0 0 #0e1020";
+  document.getElementById("reminder-settings").style.opacity = reminderCfg.enabled ? "1" : "0.45";
+}
+
+function updateNotifStatus() {
+  const el = document.getElementById("reminder-notif-status");
+  if (!("Notification" in window)) {
+    el.textContent = "⚠️ Tu navegador no soporta notificaciones."; return;
+  }
+  const p = Notification.permission;
+  if (p === "granted")  { el.textContent = "✓ Notificaciones permitidas"; el.style.color = "var(--green)"; }
+  if (p === "denied")   { el.textContent = "✕ Notificaciones bloqueadas — habilítalas en ajustes del navegador"; el.style.color = "#f08080"; }
+  if (p === "default")  { el.textContent = "Clic en Guardar para pedir permiso de notificaciones"; el.style.color = "var(--muted)"; }
+}
+
+// Open reminder modal
+document.getElementById("btn-reminder").addEventListener("click", () => {
+  document.getElementById("reminder-hours").value  = reminderCfg.hours;
+  document.getElementById("reminder-start").value  = reminderCfg.start;
+  document.getElementById("reminder-end").value    = reminderCfg.end;
+  document.querySelectorAll(".day-btn").forEach(b => {
+    b.classList.toggle("active", reminderCfg.days.includes(parseInt(b.dataset.day)));
+  });
+  renderReminderToggle();
+  updateNotifStatus();
+  document.getElementById("modal-reminder").classList.add("open");
+});
+
+document.getElementById("reminder-toggle").addEventListener("click", () => {
+  reminderCfg.enabled = !reminderCfg.enabled;
+  renderReminderToggle();
+});
+
+document.querySelectorAll(".day-btn").forEach(b => {
+  b.addEventListener("click", () => b.classList.toggle("active"));
+});
+
+document.getElementById("btn-reminder-cancel").addEventListener("click", () => {
+  document.getElementById("modal-reminder").classList.remove("open");
+});
+document.getElementById("modal-reminder").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-reminder"))
+    document.getElementById("modal-reminder").classList.remove("open");
+});
+
+document.getElementById("btn-reminder-save").addEventListener("click", async () => {
+  reminderCfg.hours = parseInt(document.getElementById("reminder-hours").value) || 2;
+  reminderCfg.start = parseInt(document.getElementById("reminder-start").value) ?? 9;
+  reminderCfg.end   = parseInt(document.getElementById("reminder-end").value) ?? 19;
+  reminderCfg.days  = [...document.querySelectorAll(".day-btn.active")].map(b => parseInt(b.dataset.day));
+
+  // Request notification permission if enabling
+  if (reminderCfg.enabled && Notification.permission === "default") {
+    const perm = await Notification.requestPermission();
+    updateNotifStatus();
+    if (perm !== "granted") { reminderCfg.enabled = false; renderReminderToggle(); }
+  }
+  saveReminderCfg();
+  applyReminderBtn();
+  startReminderLoop();
+  document.getElementById("modal-reminder").classList.remove("open");
+});
+
+// ── Reminder loop ──────────────────────────────────────────────────────────────
+function shouldRemind() {
+  if (!reminderCfg.enabled) return false;
+  if (active) return false; // timer running
+  if (Notification.permission !== "granted") return false;
+
+  const now  = new Date();
+  const day  = now.getDay();
+  const hour = now.getHours();
+  if (!reminderCfg.days.includes(day)) return false;
+  if (hour < reminderCfg.start || hour >= reminderCfg.end) return false;
+
+  // Check last session today or recently
+  const cutoff = Date.now() - reminderCfg.hours * 3600 * 1000;
+  const recentSession = sessions.find(s => {
+    const d = new Date(s.date + "T12:00:00");
+    return d.toDateString() === now.toDateString();
+  });
+  if (recentSession) {
+    // Check if last session was within the time window
+    // sessions are sorted newest first; use the most recent one today
+    const todaySessions = sessions.filter(s => s.date === todayStr());
+    if (todaySessions.length > 0) return false; // worked today already — don't nag
+  }
+  // No sessions today and past X hours since workday start
+  const workStart = new Date(); workStart.setHours(reminderCfg.start, 0, 0, 0);
+  return Date.now() - workStart.getTime() >= reminderCfg.hours * 3600 * 1000;
+}
+
+function checkReminder() {
+  if (!shouldRemind()) return;
+  const now = Date.now();
+  if (now - lastReminderSent < reminderCfg.hours * 3600 * 1000) return; // don't spam
+  lastReminderSent = now;
+
+  const n = new Notification("⏱ Kronos — ¿Empezaste a trabajar?", {
+    body: "Llevas más de " + reminderCfg.hours + "h sin registrar tiempo hoy. ¡Inicia el timer!",
+    icon: "data:image/svg+xml," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#12142a"/><circle cx="16" cy="16" r="9" fill="none" stroke="#c792ea" stroke-width="2.5"/><line x1="16" y1="16" x2="16" y2="9" stroke="#c792ea" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="16" x2="21" y2="19" stroke="#a6e3a1" stroke-width="2" stroke-linecap="round"/></svg>'
+    ),
+    badge: "Kronos",
+    tag: "kronos-reminder",
+    renotify: true,
+  });
+  n.onclick = () => { window.focus(); n.close(); };
+}
+
+function startReminderLoop() {
+  clearInterval(reminderInterval);
+  if (!reminderCfg.enabled) return;
+  reminderInterval = setInterval(checkReminder, 5 * 60 * 1000); // check every 5 min
+  checkReminder(); // immediate check
+}
+
+// Init reminder — se llama desde el init global al final del script
+function initReminder() {
+  applyReminderBtn();
+  startReminderLoop();
+}
+
 function stopConfetti() {
   clearInterval(confettiInterval);
   const canvas = document.getElementById("confetti-canvas");
@@ -2063,5 +2361,6 @@ function generatePDF(ms) {
 </script>
 </body>
 </html>
+
 
 
